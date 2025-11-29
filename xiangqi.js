@@ -23,7 +23,7 @@ function playSound(type) {
   }
 }
 
-/** CHINESE NOTATION DATA */
+/** CHINESE NOTATION */
 const CN_CHARS = {
   rR: "俥", rN: "傌", rE: "相", rA: "仕", rK: "帥", rC: "炮", rP: "兵",
   bR: "車", bN: "馬", bE: "象", bA: "士", bK: "將", bC: "炮", bP: "卒",
