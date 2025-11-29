@@ -231,7 +231,10 @@ class XiangqiEngine {
     switch (type) {
       case "K":
         return (
-          tx >= 3 && tx <= 5 && (isRed ? ty >= 7 : ty <= 2) && ax + ay === 1
+          tx >= 3 &&
+          tx <= 5 &&
+          (isRed ? ty >= 7 : ty <= 2) &&
+          ax + ay === 1
         );
       case "A":
         return (
@@ -253,10 +256,14 @@ class XiangqiEngine {
           (ax === 1 &&
             ay === 2 &&
             !this.getPiece(fx, fy + (dy > 0 ? 1 : -1))) ||
-          (ax === 2 && ay === 1 && !this.getPiece(fx + (dx > 0 ? 1 : -1), fy))
+          (ax === 2 &&
+            ay === 1 &&
+            !this.getPiece(fx + (dx > 0 ? 1 : -1), fy))
         );
       case "R":
-        return (dx === 0 || dy === 0) && this.countObs(fx, fy, tx, ty) === 0;
+        return (
+          (dx === 0 || dy === 0) && this.countObs(fx, fy, tx, ty) === 0
+        );
       case "C": {
         const obs = this.countObs(fx, fy, tx, ty);
         return (dx === 0 || dy === 0) && (target ? obs === 1 : obs === 0);
@@ -265,7 +272,8 @@ class XiangqiEngine {
         const forward = isRed ? -1 : 1;
         const crossed = isRed ? fy <= 4 : fy >= 5;
         return (
-          (dy === forward && dx === 0) || (crossed && dy === 0 && ax === 1)
+          (dy === forward && dx === 0) ||
+          (crossed && dy === 0 && ax === 1)
         );
       }
     }
@@ -292,12 +300,17 @@ class XiangqiEngine {
     if (!k) return true;
     const op = c === "r" ? "b" : "r";
     const opK = this.findPiece(op + "K");
-    if (opK && k.x === opK.x && this.countObs(k.x, k.y, opK.x, opK.y) === 0)
+    if (
+      opK &&
+      k.x === opK.x &&
+      this.countObs(k.x, k.y, opK.x, opK.y) === 0
+    )
       return true;
     for (let y = 0; y < 10; y++)
       for (let x = 0; x < 9; x++) {
         const p = this.board[y][x];
-        if (p && p[0] === op && this.validate(x, y, k.x, k.y, p)) return true;
+        if (p && p[0] === op && this.validate(x, y, k.x, k.y, p))
+          return true;
       }
     return false;
   }
@@ -369,10 +382,15 @@ class XiangqiEngine {
     let fileStr = "";
     if (col.length > 1) {
       const idx = col.indexOf(fy);
-      if (col.length === 2) fileStr = idx === 0 ? CN_CHARS["F"] : CN_CHARS["B"];
+      if (col.length === 2)
+        fileStr = idx === 0 ? CN_CHARS["F"] : CN_CHARS["B"];
       else if (col.length === 3)
         fileStr =
-          idx === 0 ? CN_CHARS["F"] : idx === 1 ? CN_CHARS["M"] : CN_CHARS["B"];
+          idx === 0
+            ? CN_CHARS["F"]
+            : idx === 1
+            ? CN_CHARS["M"]
+            : CN_CHARS["B"];
       else fileStr = isRed ? CN_NUMS[idx + 1] : CN_DIGITS_FULL[idx + 1];
       fileStr += pName;
     } else {
@@ -387,7 +405,9 @@ class XiangqiEngine {
       destStr = toCNNum(dstFile, isRed);
     } else {
       dirStr =
-        (isRed && dy < 0) || (!isRed && dy > 0) ? CN_CHARS["+"] : CN_CHARS["-"];
+        (isRed && dy < 0) || (!isRed && dy > 0)
+          ? CN_CHARS["+"]
+          : CN_CHARS["-"];
       if (["R", "C", "P", "K"].includes(p[1]))
         destStr = toCNNum(Math.abs(dy), isRed);
       else destStr = toCNNum(dstFile, isRed);
@@ -420,8 +440,8 @@ const chars = {
 function render() {
   const layer = document.getElementById("gridLayer");
   // CRITICAL: Check if layer exists before proceeding
-  if (!layer) return;
-
+  if (!layer) return; 
+    
   layer.innerHTML = "";
   // 1. Cells
   for (let y = 0; y < 10; y++) {
@@ -499,10 +519,12 @@ function updateUI() {
   const listEl = document.getElementById("moveHistory");
 
   // CRITICAL: Check if elements exist before proceeding
-  if (!statusEl || !listEl) return;
+  if (!statusEl || !listEl) return; 
 
-  statusEl.innerText = (engine.turn === "r" ? "Red" : "Black") + "'s Turn";
-  statusEl.style.color = engine.turn === "r" ? "#ff5252" : "#fff";
+  statusEl.innerText =
+    (engine.turn === "r" ? "Red" : "Black") + "'s Turn";
+  statusEl.style.color =
+    engine.turn === "r" ? "#ff5252" : "#fff";
   listEl.innerHTML = "";
   for (let i = 0; i < engine.history.length; i += 2) {
     const rm = engine.history[i];
@@ -551,7 +573,9 @@ const game = {
   // EXPORT: Custom .xqpro (JSON)
   exportXQPro: () => {
     let coords = "";
-    engine.history.forEach((m) => (coords += `${m.fx}${m.fy}${m.tx}${m.ty}`));
+    engine.history.forEach(
+      (m) => (coords += `${m.fx}${m.fy}${m.tx}${m.ty}`)
+    );
     const data = {
       type: "XiangqiMaster_Save",
       fen: engine.initialFen,
@@ -579,7 +603,7 @@ const game = {
       txt += "\n";
     }
     const inputEl = document.getElementById("ioInput");
-    if (inputEl) inputEl.value = txt;
+    if(inputEl) inputEl.value = txt;
   },
 
   loadFile: (e) => {
@@ -592,7 +616,7 @@ const game = {
 
   loadFromInput: () => {
     const inputEl = document.getElementById("ioInput");
-    if (inputEl) game.parse(inputEl.value);
+    if(inputEl) game.parse(inputEl.value);
   },
 
   parse: (txt) => {
@@ -626,12 +650,11 @@ const game = {
       const fy = parseInt(moveStr[i + 1]);
       const tx = parseInt(moveStr[i + 2]);
       const ty = parseInt(moveStr[i + 3]);
-
+      
       const p = engine.getPiece(fx, fy);
       const captured = engine.getPiece(tx, ty);
 
-      if (p && engine.validate(fx, fy, tx, ty, p)) {
-        // Added validation check
+      if (p && engine.validate(fx, fy, tx, ty, p)) { // Added validation check
         // Move piece
         engine.board[ty][tx] = p;
         engine.board[fy][fx] = null;
@@ -650,10 +673,10 @@ const game = {
 
         engine.turn = engine.turn === "r" ? "b" : "r";
       } else if (p) {
-        // If piece exists but move is invalid, it still pushes the turn forward
-        // according to the external move list, but without a move object in history.
-        // This ensures the game state aligns with the file's intent, even if the move is illegal
-        // in the current engine logic (a robust engine might stop here).
+          // If piece exists but move is invalid, it still pushes the turn forward
+          // according to the external move list, but without a move object in history.
+          // This ensures the game state aligns with the file's intent, even if the move is illegal
+          // in the current engine logic (a robust engine might stop here).
       }
     }
 
@@ -665,9 +688,9 @@ const game = {
   },
 };
 
-// ** FIX: Wrap initialization in DOMContentLoaded **
-document.addEventListener("DOMContentLoaded", (event) => {
-  // Initialize the board and UI after the HTML is fully loaded.
-  render();
-  updateUI();
+// ** CRITICAL FIX: Wrap initialization in DOMContentLoaded **
+document.addEventListener('DOMContentLoaded', (event) => {
+    // Initialize the board and UI after the HTML is fully loaded.
+    render();
+    updateUI();
 });
