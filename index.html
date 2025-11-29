@@ -6,95 +6,83 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>Xiangqi Master Pro</title>
+    <title>Xiangqi Master Pro - Optimized</title>
     <style>
-      :root {
-        --bg-color: #2c3e50;
-        --panel-bg: rgba(255, 255, 255, 0.1);
-        --text-color: #ecf0f1;
-        --accent-red: #c0392b;
-        --accent-black: #000000;
-        --board-wood: #e6b086;
-      }
-
+      /* REVERTED: Simplified CSS for performance and original aesthetic */
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Helvetica, Arial, sans-serif;
-        background-color: var(--bg-color);
-        color: var(--text-color);
+        font-family: sans-serif;
+        background: #34495e; /* Simple dark background */
+        color: #fff;
         margin: 0;
+        min-height: 100vh;
         display: flex;
         flex-direction: column;
         align-items: center;
-        min-height: 100vh;
       }
 
       h1 {
-        margin: 10px 0;
-        font-size: 1.5rem;
+        font-weight: 300;
+        margin: 20px 0;
       }
 
-      /* --- LAYOUT --- */
       .main-container {
         display: flex;
         gap: 20px;
-        padding: 10px;
-        width: 100%;
-        max-width: 1200px;
-        box-sizing: border-box;
+        justify-content: center;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding-bottom: 50px;
+        max-width: 1000px;
       }
 
-      /* Mobile Optimization: Stack columns on small screens */
-      @media (max-width: 850px) {
+      @media (max-width: 800px) {
         .main-container {
           flex-direction: column;
           align-items: center;
         }
         .sidebar {
-          width: 100%;
-          max-width: 450px;
+          width: 90vw;
+          max-width: 400px;
+        }
+        .board-frame {
+          max-width: 95vw;
         }
       }
 
-      /* --- BOARD --- */
+      /* --- BOARD & FLIP STYLES --- */
       .board-frame {
-        background: #5d4037;
         padding: 10px;
-        border-radius: 4px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 5px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
       }
 
       .board-wrapper {
         position: relative;
         width: 400px;
         height: 450px;
-        background: #deb887;
+        background-color: #e6b086;
+        border: 1px solid #5d4037;
         user-select: none;
-        transition: transform 0.5s ease;
+
+        /* KEPT: Flip Transition */
+        transition: transform 0.5s ease-in-out;
+        transform-style: preserve-3d;
       }
 
-      /* Responsive Board for Mobile */
+      /* KEPT: Board Flip */
+      .board-wrapper.flipped {
+        transform: rotateX(180deg) rotateY(180deg);
+      }
+
       @media (max-width: 450px) {
         .board-wrapper {
           width: 90vw;
-          height: 101.25vw; /* Maintain 400:450 ratio */
-        }
-        .board-grid {
-          width: 100%;
-          height: 100%;
+          height: 101.25vw;
         }
       }
 
-      /* FLIP LOGIC */
-      .board-wrapper.flipped {
-        transform: rotate(180deg);
-      }
-      .board-wrapper.flipped .piece {
-        /* Counter rotate pieces to keep them upright */
-        transform: translate(-50%, -50%) rotate(180deg);
-      }
-
-      .board-grid {
+      svg.board-grid {
         position: absolute;
         top: 0;
         left: 0;
@@ -103,14 +91,25 @@
         pointer-events: none;
       }
 
-      .river-text {
-        font-family: "KaiTi", "STKaiti", serif;
-        font-size: 24px;
-        fill: #5d4037;
-        text-anchor: middle;
+      line,
+      rect,
+      path {
+        stroke: #5d4037;
+        stroke-width: 2;
+        fill: none;
+        stroke-linecap: square;
       }
 
-      /* --- PIECES --- */
+      .river-text {
+        font-family: "KaiTi", "STKaiti", serif;
+        font-size: 32px;
+        fill: #5d4037;
+        opacity: 0.6;
+        text-anchor: middle;
+        dominant-baseline: middle;
+      }
+
+      /* --- LAYERS --- */
       .interaction-layer {
         position: absolute;
         top: 0;
@@ -120,166 +119,215 @@
         z-index: 10;
       }
 
-      .piece {
+      .cell {
         position: absolute;
-        width: 10%;
-        height: 8.88%;
+        width: 11.11%;
+        height: 10%;
+        cursor: pointer;
+        z-index: 15;
+      }
+
+      /* Markers */
+      .marker {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 5;
+        /* REVERTED: Removed slow transition on markers */
+        transform-style: preserve-3d;
+      }
+
+      .marker.selected {
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
-        background: #fdf5e6;
-        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4),
-          inset 0 0 5px rgba(0, 0, 0, 0.2);
+        background: rgba(255, 165, 0, 0.4);
+        opacity: 0.9;
+      }
+
+      .marker.last {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: rgba(60, 100, 180, 0.6);
+      }
+
+      .marker.valid {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background-color: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      /* --- PIECES --- */
+      .piece {
+        width: 50px;
+        height: 50px; /* Simplified size */
+        border-radius: 50%;
+        position: absolute;
+        transform: translate(-50%, -50%);
+        z-index: 20;
         display: flex;
         justify-content: center;
         align-items: center;
         font-family: "KaiTi", "STKaiti", serif;
+        font-size: 26px;
         font-weight: bold;
-        font-size: 1.4rem;
-        cursor: pointer;
-        transform: translate(
-          -50%,
-          -50%
-        ); /* Center piece on grid intersection */
-        transition: top 0.2s, left 0.2s, transform 0.5s;
-        z-index: 20;
+        pointer-events: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        /* REVERTED: Simplified transition for fluidity. Only left/top for movement. */
+        transition: left 0.2s ease-out, top 0.2s ease-out;
+        transform-style: preserve-3d;
+      }
+
+      /* KEPT: Flip pieces and markers back right-side-up */
+      .board-wrapper.flipped .piece,
+      .board-wrapper.flipped .marker {
+        transform: translate(-50%, -50%) rotateX(180deg) rotateY(180deg);
       }
 
       .piece.red {
+        background: #fefefe;
         color: #c0392b;
         border: 2px solid #c0392b;
       }
       .piece.black {
-        color: #000;
-        border: 2px solid #000;
+        background: #444;
+        color: #eee;
+        border: 2px solid #999;
       }
-      .piece.selected {
-        background: #ffeaa7;
-        box-shadow: 0 0 15px #ffeaa7;
-        z-index: 30;
-      }
-
-      /* --- SIDEBAR & UI --- */
-      .sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        min-width: 300px;
-      }
-
-      .glass-panel {
-        background: var(--panel-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 15px;
-        border-radius: 8px;
-      }
-
-      textarea {
-        width: 100%;
-        height: 80px;
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid #555;
-        color: #fff;
-        padding: 5px;
-        margin-bottom: 10px;
-        box-sizing: border-box;
-        font-family: monospace;
-      }
-
-      /* Buttons */
-      .btn-row {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-bottom: 8px;
-      }
-
-      button {
-        flex: 1;
-        padding: 10px;
-        border: none;
-        border-radius: 4px;
-        background: #34495e;
-        color: white;
-        cursor: pointer;
-        font-size: 0.9rem;
-        transition: background 0.2s;
-        touch-action: manipulation;
-      }
-      button:hover {
-        background: #455a64;
-      }
-      button:active {
-        transform: translateY(1px);
-      }
-
-      /* --- EDIT MODE PALETTE --- */
-      #editor-palette {
-        display: none;
-        flex-wrap: wrap;
-        gap: 5px;
-        margin-bottom: 10px;
-        background: rgba(0, 0, 0, 0.2);
-        padding: 10px;
-        border-radius: 4px;
-      }
-      #editor-palette.show {
-        display: flex;
-      }
-      .palette-piece {
-        width: 30px;
-        height: 30px;
+      .piece::before {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        right: 3px;
+        bottom: 3px;
         border-radius: 50%;
-        background: #eee;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        border: 2px solid transparent;
+        border: 1px solid rgba(0, 0, 0, 0.1);
       }
-      .palette-piece.selected {
-        border-color: yellow;
-        background: #fff;
+      .piece.black::before {
+        border-color: rgba(255, 255, 255, 0.15);
       }
 
-      /* --- SPLASH SCREEN --- */
-      #splash-overlay {
+      /* --- SPLASH SCREEN (Simplified) --- */
+      #splash {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.6);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 100;
         pointer-events: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         opacity: 0;
         transition: opacity 0.3s;
+        z-index: 100;
       }
-      #splash-overlay.show {
+      #splash.active {
         opacity: 1;
       }
 
-      #splash-text {
-        font-family: "KaiTi", "STKaiti", serif;
+      #splash.capture-subtle {
+        background: rgba(0, 0, 0, 0.2);
+      }
+      #splash.capture-subtle .splash-text {
+        font-size: 2.5rem;
+        color: #f1c40f;
+        padding: 10px 20px;
+      }
+
+      .splash-text {
+        font-family: "KaiTi", serif;
         font-size: 5rem;
-        font-weight: bold;
-        text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
-        transform: scale(0);
+        color: #ff3b30;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 30px 60px;
+        border-radius: 10px;
+        text-shadow: 0 0 10px #d32f2f;
+        transform: scale(0.5);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      #splash.active .splash-text {
+        transform: scale(1);
       }
 
-      .anim-pop {
-        animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      /* Sidebar styles */
+      .sidebar {
+        width: 340px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
       }
-
-      @keyframes popIn {
-        0% {
-          transform: scale(0);
-        }
-        100% {
-          transform: scale(1);
-        }
+      .panel {
+        background: #2c3e50;
+        border: 1px solid #1f2a35;
+        border-radius: 5px;
+        padding: 15px;
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+      }
+      .status-box {
+        text-align: center;
+        font-size: 1.1rem;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+      .history-box {
+        height: 200px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 13px;
+        background: #1f2a35;
+        padding: 5px;
+        border-radius: 3px;
+        margin-bottom: 10px;
+      }
+      .move-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 3px 6px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      textarea {
+        width: 100%;
+        height: 60px;
+        background: #1f2a35;
+        border: 1px solid #444;
+        color: white;
+        border-radius: 3px;
+        padding: 5px;
+        font-family: monospace;
+        resize: none;
+        margin-bottom: 5px;
+        outline: none;
+      }
+      .btn-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      button {
+        flex: 1;
+        padding: 8px;
+        background: #555;
+        border: none;
+        color: white;
+        border-radius: 3px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.8rem;
+        transition: background 0.1s;
+        touch-action: manipulation;
+      }
+      button:hover {
+        background: #777;
+      }
+      #file-selector {
+        display: none;
       }
     </style>
   </head>
@@ -288,410 +336,70 @@
 
     <div class="main-container">
       <div class="board-frame">
-        <div class="board-wrapper" id="boardWrapper">
+        <div class="board-wrapper">
           <svg class="board-grid" viewBox="0 0 400 450">
-            <rect
-              x="2"
-              y="2"
-              width="396"
-              height="446"
-              fill="none"
-              stroke="#5d4037"
-              stroke-width="4"
-            />
-            <line
-              x1="2"
-              y1="50"
-              x2="398"
-              y2="50"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="2"
-              y1="100"
-              x2="398"
-              y2="100"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="2"
-              y1="150"
-              x2="398"
-              y2="150"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="2"
-              y1="200"
-              x2="398"
-              y2="200"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="2"
-              y1="250"
-              x2="398"
-              y2="250"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="2"
-              y1="300"
-              x2="398"
-              y2="300"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="2"
-              y1="350"
-              x2="398"
-              y2="350"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="2"
-              y1="400"
-              x2="398"
-              y2="400"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-
-            <line
-              x1="50"
-              y1="2"
-              x2="50"
-              y2="200"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="50"
-              y1="250"
-              x2="50"
-              y2="448"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="100"
-              y1="2"
-              x2="100"
-              y2="200"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="100"
-              y1="250"
-              x2="100"
-              y2="448"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="150"
-              y1="2"
-              x2="150"
-              y2="200"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="150"
-              y1="250"
-              x2="150"
-              y2="448"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="200"
-              y1="2"
-              x2="200"
-              y2="200"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="200"
-              y1="250"
-              x2="200"
-              y2="448"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="250"
-              y1="2"
-              x2="250"
-              y2="200"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="250"
-              y1="250"
-              x2="250"
-              y2="448"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="300"
-              y1="2"
-              x2="300"
-              y2="200"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="300"
-              y1="250"
-              x2="300"
-              y2="448"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="350"
-              y1="2"
-              x2="350"
-              y2="200"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="350"
-              y1="250"
-              x2="350"
-              y2="448"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-
-            <line
-              x1="150"
-              y1="2"
-              x2="250"
-              y2="100"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="250"
-              y1="2"
-              x2="150"
-              y2="100"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="150"
-              y1="350"
-              x2="250"
-              y2="448"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-            <line
-              x1="250"
-              y1="350"
-              x2="150"
-              y2="448"
-              stroke="#5d4037"
-              stroke-width="1"
-            />
-
-            <text x="100" y="235" class="river-text">楚 河</text>
-            <text x="300" y="235" class="river-text">漢 界</text>
+            <rect x="0" y="0" width="400" height="450" stroke-width="4" />
+            <line x1="50" y1="0" x2="50" y2="200" />
+            <line x1="50" y1="250" x2="50" y2="450" />
+            <line x1="100" y1="0" x2="100" y2="200" />
+            <line x1="100" y1="250" x2="100" y2="450" />
+            <line x1="150" y1="0" x2="150" y2="200" />
+            <line x1="150" y1="250" x2="150" y2="450" />
+            <line x1="200" y1="0" x2="200" y2="200" />
+            <line x1="200" y1="250" x2="200" y2="450" />
+            <line x1="250" y1="0" x2="250" y2="200" />
+            <line x1="250" y1="250" x2="250" y2="450" />
+            <line x1="300" y1="0" x2="300" y2="200" />
+            <line x1="300" y1="250" x2="300" y2="450" />
+            <line x1="350" y1="0" x2="350" y2="200" />
+            <line x1="350" y1="250" x2="350" y2="450" />
+            <line x1="0" y1="50" x2="400" y2="50" />
+            <line x1="0" y1="100" x2="400" y2="100" />
+            <line x1="0" y1="150" x2="400" y2="150" />
+            <line x1="0" y1="200" x2="400" y2="200" />
+            <line x1="0" y1="250" x2="400" y2="250" />
+            <line x1="0" y1="300" x2="400" y2="300" />
+            <line x1="0" y1="350" x2="400" y2="350" />
+            <line x1="0" y1="400" x2="400" y2="400" />
+            <line x1="150" y1="0" x2="250" y2="100" />
+            <line x1="250" y1="0" x2="150" y2="100" />
+            <line x1="150" y1="350" x2="250" y2="450" />
+            <line x1="250" y1="350" x2="150" y2="450" />
+            <text x="100" y="225" class="river-text">楚 河</text>
+            <text x="300" y="225" class="river-text">漢 界</text>
           </svg>
-
-          <div
-            class="interaction-layer"
-            id="gridLayer"
-            onclick="game.handleBoardClick(event)"
-          ></div>
+          <div class="interaction-layer" id="gridLayer"></div>
         </div>
       </div>
 
       <div class="sidebar">
-        <div class="glass-panel">
+        <div class="panel">
           <div id="status" class="status-box">Red's Turn</div>
+          <div id="moveHistory" class="history-box"></div>
           <div class="btn-row">
-            <button style="background: #2980b9" onclick="game.toggleFlip()">
-              Flip Board
-            </button>
-            <button onclick="game.undo()">Undo</button>
             <button style="background: #c0392b" onclick="game.reset()">
               Reset
             </button>
-          </div>
-          <div class="btn-row">
-            <button
-              style="font-size: 0.8em; opacity: 0.7"
-              onclick="ui.showSplash('checkmate')"
-            >
-              Simulate Mate
-            </button>
-            <button
-              style="font-size: 0.8em; opacity: 0.7"
-              onclick="ui.showSplash('capture')"
-            >
-              Simulate Capture
+            <button onclick="game.undo()">Undo</button>
+            <button onclick="game.flipBoard()" style="background: #4a148c">
+              Flip Board
             </button>
           </div>
         </div>
 
-        <div class="glass-panel">
-          <div class="btn-row">
-            <button onclick="game.toggleEditMode()">Setup Mode</button>
-            <button
-              onclick="game.clearBoard()"
-              id="btnClear"
-              style="display: none; background: #e74c3c"
-            >
-              Clear Board
-            </button>
-          </div>
-
-          <div id="editor-palette">
-            <div
-              style="
-                font-size: 0.8rem;
-                width: 100%;
-                margin-bottom: 5px;
-                opacity: 0.8;
-              "
-            >
-              Click piece, then click board to place/replace. Click square to
-              clear.
-            </div>
-            <div
-              class="palette-piece"
-              style="color: #c0392b"
-              onclick="game.selectPalettePiece('R', event)"
-            >
-              車
-            </div>
-            <div
-              class="palette-piece"
-              style="color: #c0392b"
-              onclick="game.selectPalettePiece('N', event)"
-            >
-              馬
-            </div>
-            <div
-              class="palette-piece"
-              style="color: #c0392b"
-              onclick="game.selectPalettePiece('B', event)"
-            >
-              相
-            </div>
-            <div
-              class="palette-piece"
-              style="color: #c0392b"
-              onclick="game.selectPalettePiece('A', event)"
-            >
-              仕
-            </div>
-            <div
-              class="palette-piece"
-              style="color: #c0392b"
-              onclick="game.selectPalettePiece('K', event)"
-            >
-              帥
-            </div>
-            <div
-              class="palette-piece"
-              style="color: #c0392b"
-              onclick="game.selectPalettePiece('C', event)"
-            >
-              炮
-            </div>
-            <div
-              class="palette-piece"
-              style="color: #c0392b"
-              onclick="game.selectPalettePiece('P', event)"
-            >
-              兵
-            </div>
-            <div
-              style="width: 100%; height: 1px; background: #555; margin: 5px 0"
-            ></div>
-            <div
-              class="palette-piece"
-              style="color: #000"
-              onclick="game.selectPalettePiece('r', event)"
-            >
-              車
-            </div>
-            <div
-              class="palette-piece"
-              style="color: #000"
-              onclick="game.selectPalettePiece('n', event)"
-            >
-              馬
-            </div>
-            <div
-              class="palette-piece"
-              style="color: #000"
-              onclick="game.selectPalettePiece('b', event)"
-            >
-              象
-            </div>
-            <div
-              class="palette-piece"
-              style="color: #000"
-              onclick="game.selectPalettePiece('a', event)"
-            >
-              士
-            </div>
-            <div
-              class="palette-piece"
-              style="color: #000"
-              onclick="game.selectPalettePiece('k', event)"
-            >
-              將
-            </div>
-            <div
-              class="palette-piece"
-              style="color: #000"
-              onclick="game.selectPalettePiece('c', event)"
-            >
-              炮
-            </div>
-            <div
-              class="palette-piece"
-              style="color: #000"
-              onclick="game.selectPalettePiece('p', event)"
-            >
-              卒
-            </div>
-          </div>
-        </div>
-
-        <div class="glass-panel">
+        <div class="panel">
           <div style="font-size: 0.8rem; margin-bottom: 5px; opacity: 0.7">
-            HuaShan / FEN / PGN
+            Game Data (Text Export)
           </div>
           <textarea
             id="ioInput"
-            placeholder="Paste HuaShan format here..."
+            placeholder="Exported text will appear here..."
           ></textarea>
 
           <input
             type="file"
             id="file-selector"
-            accept=".xqpro,.txt,.pgn,text/plain"
-            style="display: none"
+            accept=".xqpro,.txt"
             onchange="game.loadFile(event)"
           />
 
@@ -700,394 +408,723 @@
               style="background: #27ae60"
               onclick="document.getElementById('file-selector').click()"
             >
-              Load File
+              Load .xqpro
             </button>
-            <button onclick="game.loadFromInput()">Load Text</button>
+            <button onclick="game.exportXQPro()">Save .xqpro</button>
           </div>
-          <div class="btn-row">
-            <button onclick="game.copyToClipboard()">Copy Text</button>
+          <div class="btn-row" style="margin-top: 8px">
+            <button onclick="game.loadFromInput()">Load Text/DPXQ</button>
+            <button onclick="game.exportText()">Export Text</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div id="splash-overlay">
-      <div id="splash-text"></div>
-    </div>
+    <div id="splash"><div class="splash-text"></div></div>
 
     <script>
-      // --- 1. UI HELPER ---
-      const ui = {
-        boardWrapper: document.getElementById("boardWrapper"),
-        gridLayer: document.getElementById("gridLayer"),
-        status: document.getElementById("status"),
-        ioInput: document.getElementById("ioInput"),
-        palette: document.getElementById("editor-palette"),
-        overlay: document.getElementById("splash-overlay"),
-        splashText: document.getElementById("splash-text"),
+      /** AUDIO */
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      function playSound(type) {
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const t = audioCtx.currentTime;
+        const mkOsc = (freq, type, dur, vol) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(vol, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + dur);
+        };
+        if (type === "move") {
+          mkOsc(200, "sine", 0.15, 0.4);
+          mkOsc(50, "square", 0.05, 0.2);
+        } else if (type === "capture") {
+          mkOsc(300, "triangle", 0.1, 0.5);
+          mkOsc(150, "square", 0.1, 0.3);
+        } else if (type === "check") {
+          mkOsc(800, "triangle", 0.6, 0.3);
+        }
+      }
 
-        renderBoard: (grid) => {
-          ui.gridLayer.innerHTML = "";
-          for (let r = 0; r < 10; r++) {
-            for (let c = 0; c < 9; c++) {
-              const pieceChar = grid[r][c];
-              if (pieceChar) {
-                const el = document.createElement("div");
-                el.className = `piece ${ui.getSide(pieceChar)}`;
-                el.innerText = ui.getLabel(pieceChar);
-
-                // Coordinates based on 400x450 grid scaling
-                const leftPct = ((2 + c * (396 / 8)) / 400) * 100;
-                const topPct = ((2 + r * (446 / 9)) / 450) * 100;
-
-                el.style.left = `${leftPct}%`;
-                el.style.top = `${topPct}%`;
-
-                el.dataset.r = r;
-                el.dataset.c = c;
-
-                ui.gridLayer.appendChild(el);
-              }
-            }
-          }
-        },
-
-        getSide: (char) => (char === char.toUpperCase() ? "red" : "black"),
-
-        getLabel: (char) => {
-          const map = {
-            K: "帥",
-            A: "仕",
-            B: "相",
-            N: "馬",
-            R: "車",
-            C: "炮",
-            P: "兵",
-            k: "將",
-            a: "士",
-            b: "象",
-            n: "馬",
-            r: "車",
-            c: "炮",
-            p: "卒",
-          };
-          return map[char] || "?";
-        },
-
-        showSplash: (type) => {
-          let text = "";
-          let color = "white";
-          if (type === "capture") {
-            text = "吃!";
-            color = "#f1c40f";
-          }
-          if (type === "checkmate") {
-            text = "絕殺!";
-            color = "#e74c3c";
-          }
-          if (type === "smothered") {
-            text = "悶宮!";
-            color = "#e74c3c";
-          }
-
-          ui.splashText.innerText = text;
-          ui.splashText.style.color = color;
-
-          ui.splashText.classList.remove("anim-pop");
-          void ui.splashText.offsetWidth; // Trigger reflow
-          ui.splashText.classList.add("anim-pop");
-
-          ui.overlay.classList.add("show");
-          setTimeout(() => ui.overlay.classList.remove("show"), 1500);
-        },
+      /** CHINESE NOTATION DATA (For Text Export Only) */
+      const CN_CHARS = {
+        rR: "俥",
+        rN: "傌",
+        rE: "相",
+        rA: "仕",
+        rK: "帥",
+        rC: "炮",
+        rP: "兵",
+        bR: "車",
+        bN: "馬",
+        bE: "象",
+        bA: "士",
+        bK: "將",
+        bC: "炮",
+        bP: "卒",
+        "+": "进",
+        "-": "退",
+        "=": "平",
+        F: "前",
+        M: "中",
+        B: "后",
       };
+      const CN_NUMS = [
+        "零",
+        "一",
+        "二",
+        "三",
+        "四",
+        "五",
+        "六",
+        "七",
+        "八",
+        "九",
+      ];
+      const CN_DIGITS_FULL = [
+        "０",
+        "１",
+        "２",
+        "３",
+        "４",
+        "5",
+        "６",
+        "７",
+        "８",
+        "９",
+      ];
+      function toCNFile(n, isRed) {
+        return isRed ? CN_NUMS[n] : CN_DIGITS_FULL[n];
+      }
+      function toCNNum(n, isRed) {
+        return isRed ? CN_NUMS[n] : CN_DIGITS_FULL[n];
+      }
 
-      // --- 2. GAME LOGIC ---
-      const game = {
-        grid: [],
-        turn: "w",
-        editMode: false,
-        selectedPalettePiece: null,
-        selectedSquare: null,
+      // Global flip state
+      let isFlipped = false;
 
-        init: () => {
-          game.loadFEN(
-            "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1"
-          );
-        },
-
-        loadFEN: (fen) => {
+      class XiangqiEngine {
+        constructor() {
+          this.reset();
+        }
+        reset() {
+          this.board = Array(10)
+            .fill(null)
+            .map(() => Array(9).fill(null));
+          this.turn = "r";
+          this.history = [];
+          this.initialFen =
+            "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1";
+          this.loadFEN(this.initialFen);
+        }
+        getPiece(x, y) {
+          if (x < 0 || x > 8 || y < 0 || y > 9) return null;
+          return this.board[y][x];
+        }
+        loadFEN(fen) {
+          this.board = Array(10)
+            .fill(null)
+            .map(() => Array(9).fill(null));
           const parts = fen.split(" ");
           const rows = parts[0].split("/");
-          game.grid = Array(10)
-            .fill()
-            .map(() => Array(9).fill(null));
-
-          for (let r = 0; r < rows.length; r++) {
-            let c = 0;
-            for (let i = 0; i < rows[r].length; i++) {
-              const char = rows[r][i];
-              if (!isNaN(char)) {
-                c += parseInt(char);
-              } else {
-                game.grid[r][c] = char;
-                c++;
+          const map = {
+            R: "rR",
+            N: "rN",
+            B: "rE",
+            A: "rA",
+            K: "rK",
+            C: "rC",
+            P: "rP",
+            r: "bR",
+            n: "bN",
+            b: "bE",
+            a: "bA",
+            k: "bK",
+            c: "bC",
+            p: "bP",
+          };
+          for (let y = 0; y < 10; y++) {
+            let x = 0;
+            const row = rows[y] || "";
+            for (let i = 0; i < row.length; i++) {
+              const c = row[i];
+              if (!isNaN(c)) x += parseInt(c);
+              else {
+                if (map[c]) this.board[y][x] = map[c];
+                x++;
               }
             }
           }
-          game.turn = parts[1] || "w";
-          document.getElementById("status").innerText =
-            game.turn === "w" ? "Red's Turn" : "Black's Turn";
-          ui.renderBoard(game.grid);
-        },
-
-        getFEN: () => {
+          this.turn = parts[1] === "b" ? "b" : "r";
+          if (this.history.length === 0) this.initialFen = fen;
+        }
+        getFEN() {
           let fen = "";
-          for (let r = 0; r < 10; r++) {
+          const map = {
+            rR: "R",
+            rN: "N",
+            rE: "B",
+            rA: "A",
+            rK: "K",
+            rC: "C",
+            rP: "P",
+            bR: "r",
+            bN: "n",
+            bE: "b",
+            bA: "a",
+            bK: "k",
+            bC: "c",
+            bP: "p",
+          };
+          for (let y = 0; y < 10; y++) {
             let empty = 0;
-            for (let c = 0; c < 9; c++) {
-              if (game.grid[r][c] == null) empty++;
+            for (let x = 0; x < 9; x++) {
+              const p = this.board[y][x];
+              if (!p) empty++;
               else {
                 if (empty > 0) {
                   fen += empty;
                   empty = 0;
                 }
-                fen += game.grid[r][c];
+                fen += map[p];
               }
             }
             if (empty > 0) fen += empty;
-            if (r < 9) fen += "/";
+            if (y < 9) fen += "/";
           }
-          return fen + ` ${game.turn} - - 0 1`;
-        },
+          return fen + " " + (this.turn === "r" ? "w" : "b") + " - - 0 1";
+        }
 
-        // --- VALIDATION FIX ---
-        validatePlacement: (piece, r, c) => {
-          if (!piece) return true;
+        // --- CORE MOVEMENT/VALIDATION (Unchanged Logic) ---
+        move(fx, fy, tx, ty) {
+          const p = this.getPiece(fx, fy);
+          if (!p || p[0] !== this.turn) return { success: false };
 
-          const type = piece.toUpperCase();
-          const isRed = piece === piece.toUpperCase();
+          const tempBoard = JSON.parse(JSON.stringify(this.board));
+          const captured = tempBoard[ty][tx];
 
-          // King (K) and Advisor (A) - Palace Logic
-          if (type === "K" || type === "A") {
-            if (c < 3 || c > 5) return false;
+          if (!this.validate(fx, fy, tx, ty, p, tempBoard))
+            return { success: false };
 
-            if (isRed) {
-              if (r < 7) return false; // Red Palace: Rows 7-9
-            } else {
-              if (r > 2) return false; // Black Palace: Rows 0-2
+          tempBoard[ty][tx] = p;
+          tempBoard[fy][fx] = null;
+
+          if (this.isInCheck(this.turn, tempBoard)) {
+            return { success: false, reason: "Self check" };
+          }
+          if (this.isFlyingGeneral(tempBoard)) {
+            return { success: false, reason: "Flying General" };
+          }
+
+          this.board = tempBoard;
+
+          const wxf = this.getWXFNotation(fx, fy, tx, ty, p);
+          const cn = this.getChineseNotation(fx, fy, tx, ty, p);
+
+          this.history.push({
+            fx,
+            fy,
+            tx,
+            ty,
+            captured,
+            p,
+            notation: wxf,
+            cnNotation: cn,
+          });
+          this.turn = this.turn === "r" ? "b" : "r";
+          return {
+            success: true,
+            capture: !!captured,
+            check: this.isInCheck(this.turn),
+          };
+        }
+
+        validate(fx, fy, tx, ty, p, board = this.board) {
+          if (fx === tx && fy === ty) return false;
+          const target = this.getPieceFromBoard(tx, ty, board);
+          if (target && target[0] === p[0]) return false;
+          const dx = tx - fx,
+            dy = ty - fy,
+            ax = Math.abs(dx),
+            ay = Math.abs(dy);
+          const type = p[1],
+            isRed = p[0] === "r";
+          const getP = (x, y) => this.getPieceFromBoard(x, y, board);
+
+          switch (type) {
+            case "K":
+              return (
+                tx >= 3 &&
+                tx <= 5 &&
+                (isRed ? ty >= 7 : ty <= 2) &&
+                ax + ay === 1
+              );
+            case "A":
+              return (
+                tx >= 3 &&
+                tx <= 5 &&
+                (isRed ? ty >= 7 : ty <= 2) &&
+                ax === 1 &&
+                ay === 1
+              );
+            case "E":
+              return (
+                (isRed ? ty >= 5 : ty <= 4) &&
+                ax === 2 &&
+                ay === 2 &&
+                !getP(fx + dx / 2, fy + dy / 2)
+              );
+            case "N":
+              return (
+                (ax === 1 && ay === 2 && !getP(fx, fy + Math.sign(dy))) ||
+                (ax === 2 && ay === 1 && !getP(fx + Math.sign(dx), fy))
+              );
+            case "R":
+              return (
+                (dx === 0 || dy === 0) &&
+                this.countObs(fx, fy, tx, ty, board) === 0
+              );
+            case "C": {
+              const obs = this.countObs(fx, fy, tx, ty, board);
+              return (dx === 0 || dy === 0) && (target ? obs === 1 : obs === 0);
+            }
+            case "P": {
+              const forward = isRed ? -1 : 1;
+              const crossed = isRed ? fy <= 4 : fy >= 5;
+              return (
+                (dy === forward && dx === 0) ||
+                (crossed && dy === 0 && ax === 1 && ay === 0)
+              );
             }
           }
+          return false;
+        }
 
-          // Elephant (B) - River Logic
-          if (type === "B") {
-            if (isRed) {
-              if (r < 5) return false; // Red Elephants must stay in bottom half (Rows 5-9)
-            } else {
-              if (r > 4) return false; // Black Elephants must stay in top half (Rows 0-4)
+        getPieceFromBoard(x, y, board) {
+          if (x < 0 || x > 8 || y < 0 || y > 9) return null;
+          return board[y][x];
+        }
+
+        countObs(x1, y1, x2, y2, board = this.board) {
+          let cnt = 0,
+            dx = Math.sign(x2 - x1),
+            dy = Math.sign(y2 - y1);
+          let x = x1 + dx,
+            y = y1 + dy;
+          if (dx !== 0 && dy !== 0) return -1;
+          while (x !== x2 || y !== y2) {
+            if (this.getPieceFromBoard(x, y, board)) cnt++;
+            x += dx;
+            y += dy;
+          }
+          return cnt;
+        }
+
+        findPiece(code, board = this.board) {
+          for (let y = 0; y < 10; y++)
+            for (let x = 0; x < 9; x++)
+              if (board[y][x] === code) return { x, y };
+          return null;
+        }
+
+        isFlyingGeneral(board = this.board) {
+          const k = this.findPiece("rK", board);
+          const opK = this.findPiece("bK", board);
+          if (!k || !opK) return false;
+          if (k.x !== opK.x) return false;
+          if (this.countObs(k.x, k.y, opK.x, opK.y, board) === 0) return true;
+          return false;
+        }
+
+        isInCheck(c, board = this.board) {
+          const k = this.findPiece(c + "K", board);
+          if (!k) return false;
+          const op = c === "r" ? "b" : "r";
+
+          const opK = this.findPiece(op + "K", board);
+          if (
+            opK &&
+            k.x === opK.x &&
+            this.countObs(k.x, k.y, opK.x, opK.y, board) === 0
+          )
+            return true;
+
+          for (let y = 0; y < 10; y++)
+            for (let x = 0; x < 9; x++) {
+              const p = board[y][x];
+              if (p && p[0] === op && this.validate(x, y, k.x, k.y, p, board))
+                return true;
             }
-          }
-          return true;
-        },
+          return false;
+        }
 
-        // --- CLICK HANDLER FIX (FLIP LOGIC) ---
-        handleBoardClick: (e) => {
-          const rect = ui.boardWrapper.getBoundingClientRect();
+        getValidMoves(fx, fy) {
+          const p = this.getPiece(fx, fy);
+          if (!p || p[0] !== this.turn) return [];
+          const moves = [];
+          for (let ty = 0; ty < 10; ty++) {
+            for (let tx = 0; tx < 9; tx++) {
+              if (this.validate(fx, fy, tx, ty, p)) {
+                const tempBoard = JSON.parse(JSON.stringify(this.board));
+                tempBoard[ty][tx] = p;
+                tempBoard[fy][fx] = null;
 
-          // 1. Calculate raw Row/Col based on click position
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-
-          let c = Math.round((((x / rect.width) * 400 - 2) * 8) / 396);
-          let r = Math.round((((y / rect.height) * 450 - 2) * 9) / 446);
-
-          // 2. FLIP FIX: Invert coordinates if board is visually flipped
-          const isFlipped = ui.boardWrapper.classList.contains("flipped");
-          if (isFlipped) {
-            c = 8 - c;
-            r = 9 - r;
-          }
-
-          if (c < 0 || c > 8 || r < 0 || r > 9) return;
-
-          // --- EDIT MODE LOGIC (WITH VALIDATION) ---
-          if (game.editMode) {
-            if (game.selectedPalettePiece) {
-              if (game.validatePlacement(game.selectedPalettePiece, r, c)) {
-                game.grid[r][c] = game.selectedPalettePiece;
-                ui.renderBoard(game.grid);
-              } else {
-                alert(
-                  "Invalid placement! King/Advisor must be in the palace, Elephant must stay on its side."
-                );
-              }
-            } else {
-              // Clear square
-              game.grid[r][c] = null;
-              ui.renderBoard(game.grid);
-            }
-            return;
-          }
-
-          // --- PLAY MODE LOGIC (Simplified) ---
-          if (!game.selectedSquare) {
-            const piece = game.grid[r][c];
-            if (!piece) return;
-
-            const isRed = piece === piece.toUpperCase();
-            if ((game.turn === "w" && isRed) || (game.turn === "b" && !isRed)) {
-              game.selectedSquare = { r, c };
-              document.querySelectorAll(".piece").forEach((el) => {
                 if (
-                  parseInt(el.dataset.r) === r &&
-                  parseInt(el.dataset.c) === c
+                  !this.isInCheck(p[0], tempBoard) &&
+                  !this.isFlyingGeneral(tempBoard)
                 ) {
-                  el.classList.add("selected");
-                } else {
-                  el.classList.remove("selected");
+                  moves.push({ x: tx, y: ty });
                 }
-              });
-            }
-          } else {
-            const fromR = game.selectedSquare.r;
-            const fromC = game.selectedSquare.c;
-            const targetPiece = game.grid[r][c];
-
-            const movingPiece = game.grid[fromR][fromC];
-            const isMovingRed = movingPiece === movingPiece.toUpperCase();
-
-            if (targetPiece) {
-              const isTargetRed = targetPiece === targetPiece.toUpperCase();
-              if (isMovingRed === isTargetRed) {
-                game.selectedSquare = null;
-                game.handleBoardClick(e);
-                return;
               }
-              ui.showSplash("capture");
             }
-
-            game.grid[r][c] = game.grid[fromR][fromC];
-            game.grid[fromR][fromC] = null;
-
-            game.turn = game.turn === "w" ? "b" : "w";
-            document.getElementById("status").innerText =
-              game.turn === "w" ? "Red's Turn" : "Black's Turn";
-            game.selectedSquare = null;
-            ui.renderBoard(game.grid);
           }
-        },
-
-        // --- EDIT MODE ---
-        toggleEditMode: () => {
-          game.editMode = !game.editMode;
-          const btn = document.querySelector(
-            'button[onclick="game.toggleEditMode()"]'
-          );
-          const clearBtn = document.getElementById("btnClear");
-
-          if (game.editMode) {
-            btn.innerText = "Done Setup";
-            btn.style.background = "#e67e22";
-            ui.palette.classList.add("show");
-            clearBtn.style.display = "block";
-          } else {
-            btn.innerText = "Setup Mode";
-            btn.style.background = "";
-            ui.palette.classList.remove("show");
-            clearBtn.style.display = "none";
-            game.selectedPalettePiece = null;
-            document
-              .querySelectorAll(".palette-piece")
-              .forEach((el) => el.classList.remove("selected"));
-          }
-        },
-
-        clearBoard: () => {
-          if (confirm("Clear entire board?")) {
-            game.grid = Array(10)
-              .fill()
-              .map(() => Array(9).fill(null));
-            ui.renderBoard(game.grid);
-          }
-        },
-
-        selectPalettePiece: (char, event) => {
-          game.selectedPalettePiece = char;
-          document
-            .querySelectorAll(".palette-piece")
-            .forEach((el) => el.classList.remove("selected"));
-          event.currentTarget.classList.add("selected");
-        },
+          return moves;
+        }
 
         // --- UTILS ---
-        toggleFlip: () => {
-          ui.boardWrapper.classList.toggle("flipped");
-        },
+        undo() {
+          if (!this.history.length) return false;
+          const last = this.history.pop();
+          this.board[last.fy][last.fx] = last.p;
+          this.board[last.ty][last.tx] = last.captured;
+          this.turn = last.p[0];
+          return true;
+        }
 
-        reset: () => {
-          game.init();
-        },
+        // Simplified Notation Logic
+        getWXFNotation(fx, fy, tx, ty, p) {
+          return `${p[1]}${fx + 1}-${tx + 1}`;
+        }
+        getChineseNotation(fx, fy, tx, ty, p) {
+          return `${CN_CHARS[p]}${fx + 1}${CN_CHARS["="]}${tx + 1}`;
+        }
+      }
 
-        undo: () => {
-          alert("Undo not implemented in this demo (requires history stack).");
-        },
+      /** UI */
+      const engine = new XiangqiEngine();
+      let selected = null;
+      let validMoves = [];
+      const chars = {
+        rK: "帥",
+        rA: "仕",
+        rE: "相",
+        rN: "傌",
+        rR: "俥",
+        rC: "炮",
+        rP: "兵",
+        bK: "將",
+        bA: "士",
+        bE: "象",
+        bN: "馬",
+        bR: "車",
+        bC: "炮",
+        bP: "卒",
+      };
 
-        // --- I/O & PARSER ---
-        loadFile: (event) => {
-          const file = event.target.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            ui.ioInput.value = e.target.result;
-            game.loadFromInput();
-          };
-          reader.readAsText(file);
-        },
+      function render() {
+        const layer = document.getElementById("gridLayer");
+        layer.innerHTML = "";
 
-        loadFromInput: () => {
-          const text = ui.ioInput.value;
-          if (!text.trim()) return;
+        // Grid unit in percentage
+        const X_UNIT = 100 / 8; // 12.5% (8 segments, 9 points)
+        const Y_UNIT = 100 / 9; // 11.11...% (9 segments, 10 points)
 
-          const huaShan = game.parseHuaShan(text);
-          if (huaShan.startFen) {
-            game.loadFEN(huaShan.startFen);
-            alert("Loaded HuaShan Format!");
-          } else if (text.includes("/")) {
-            game.loadFEN(text);
+        // 1. Cells (Invisible layer for clicking)
+        for (let y = 0; y < 10; y++) {
+          for (let x = 0; x < 9; x++) {
+            const cell = document.createElement("div");
+            cell.className = "cell";
+            cell.style.left = x * 11.11 + "%";
+            cell.style.top = y * 10 + "%";
+            cell.onclick = () => onCellClick(x, y);
+            layer.appendChild(cell);
+          }
+        }
+
+        // 2. Markers
+        if (engine.history.length) {
+          const last = engine.history[engine.history.length - 1];
+          addMarker(layer, last.fx, last.fy, "marker last", X_UNIT, Y_UNIT);
+          addMarker(layer, last.tx, last.ty, "marker last", X_UNIT, Y_UNIT);
+        }
+        if (selected)
+          addMarker(
+            layer,
+            selected.x,
+            selected.y,
+            "marker selected",
+            X_UNIT,
+            Y_UNIT
+          );
+        validMoves.forEach((m) =>
+          addMarker(layer, m.x, m.y, "marker valid", X_UNIT, Y_UNIT)
+        );
+
+        // 3. Pieces
+        for (let y = 0; y < 10; y++) {
+          for (let x = 0; x < 9; x++) {
+            const p = engine.getPiece(x, y);
+            if (p) {
+              const div = document.createElement("div");
+              div.className = `piece ${p[0] === "r" ? "red" : "black"}`;
+              div.innerText = chars[p];
+
+              // REVERTED & CORRECTED ALIGNMENT LOGIC:
+              // Uses X_UNIT and Y_UNIT derived from the number of segments (8 and 9 respectively).
+              div.style.left = x * X_UNIT + "%";
+              div.style.top = y * Y_UNIT + "%";
+
+              layer.appendChild(div);
+            }
+          }
+        }
+      }
+
+      function addMarker(p, x, y, c, X_UNIT, Y_UNIT) {
+        const d = document.createElement("div");
+        d.className = c;
+
+        // REVERTED & CORRECTED ALIGNMENT LOGIC for markers
+        d.style.left = x * X_UNIT + "%";
+        d.style.top = y * Y_UNIT + "%";
+
+        p.appendChild(d);
+      }
+
+      function onCellClick(x, y) {
+        const p = engine.getPiece(x, y);
+        const myTurn = p && p[0] === engine.turn;
+
+        if (myTurn) {
+          selected = { x, y };
+          validMoves = engine.getValidMoves(x, y);
+          render();
+          return;
+        }
+
+        if (selected) {
+          const canMove = validMoves.some((m) => m.x === x && m.y === y);
+          if (canMove) {
+            const res = engine.move(selected.x, selected.y, x, y);
+            if (res.success) {
+              selected = null;
+              validMoves = [];
+              render();
+              updateUI();
+              if (res.check) {
+                playSound("check");
+                splash("check");
+              } else if (res.capture) {
+                playSound("capture");
+                splash("capture");
+              } else playSound("move");
+            } else if (res.reason) {
+              alert(
+                `Illegal Move: ${
+                  res.reason === "Flying General"
+                    ? "Violates the Flying General (Kings Facing) rule!"
+                    : "Results in King in Check!"
+                }`
+              );
+            }
           } else {
-            alert("Could not detect valid FEN or HuaShan format.");
+            // Clicks a non-valid target or an empty square after selecting a piece. Deselect.
+            selected = null;
+            validMoves = [];
+            render();
+          }
+        }
+      }
+
+      function updateUI() {
+        document.getElementById("status").innerText =
+          (engine.turn === "r" ? "Red (帥)" : "Black (將)") + "'s Turn";
+        document.getElementById("status").style.color =
+          engine.turn === "r" ? "#ff5252" : "#eee";
+        const list = document.getElementById("moveHistory");
+        list.innerHTML = "";
+        for (let i = 0; i < engine.history.length; i += 2) {
+          const rm = engine.history[i];
+          const bm = engine.history[i + 1];
+          const row = document.createElement("div");
+          row.className = "move-row";
+          row.innerHTML = `
+            <span style="color:#aaa; width:25px;">${i / 2 + 1}.</span>
+            <span style="color:#ff5252; flex:1;">${rm ? rm.notation : ""}</span>
+            <span style="color:#eee; flex:1; text-align:right;">${
+              bm ? bm.notation : ""
+            }</span>
+        `;
+          list.appendChild(row);
+        }
+        list.scrollTop = list.scrollHeight;
+      }
+
+      function splash(type) {
+        const el = document.getElementById("splash");
+        const textEl = el.querySelector(".splash-text");
+
+        el.classList.remove("active", "capture-subtle");
+        textEl.classList.remove("capture-subtle");
+
+        let text = "";
+        let duration = 1200;
+
+        if (type === "capture") {
+          text = "吃!";
+          el.classList.add("capture-subtle");
+          textEl.classList.add("capture-subtle");
+          duration = 800;
+        } else if (type === "check") {
+          text = "將軍";
+        }
+
+        textEl.innerText = text;
+
+        void el.offsetWidth;
+        el.classList.add("active");
+
+        setTimeout(() => el.classList.remove("active"), duration);
+      }
+
+      const game = {
+        reset: () => {
+          engine.reset();
+          selected = null;
+          validMoves = [];
+          render();
+          updateUI();
+          playSound("move");
+          isFlipped = false;
+          document.querySelector(".board-wrapper").classList.remove("flipped");
+        },
+        undo: () => {
+          if (engine.undo()) {
+            selected = null;
+            validMoves = [];
+            render();
+            updateUI();
+            playSound("move");
           }
         },
 
-        parseHuaShan: (text) => {
-          const result = { startFen: null, moves: [] };
-          const fenMatch = text.match(/\[FEN "([^"]+)"\]/);
-          if (fenMatch) {
-            result.startFen = fenMatch[1];
-          } else if (text.includes("rnbakabnr")) {
-            const lines = text.split("\n");
-            const fenLine = lines.find(
-              (l) => l.includes("/") && l.includes("rnbakabnr")
-            );
-            if (fenLine) result.startFen = fenLine.trim();
+        // KEPT: Flip Board function
+        flipBoard: () => {
+          isFlipped = !isFlipped;
+          const wrapper = document.querySelector(".board-wrapper");
+          if (isFlipped) {
+            wrapper.classList.add("flipped");
+          } else {
+            wrapper.classList.remove("flipped");
           }
-          return result;
-        },
-
-        copyToClipboard: () => {
-          const text = ui.ioInput.value || game.getFEN();
-          navigator.clipboard.writeText(text).then(() => {
-            alert("Copied to clipboard!");
-          });
         },
 
         exportXQPro: () => {
-          alert("Export logic would go here.");
+          let coords = "";
+          engine.history.forEach(
+            (m) => (coords += `${m.fx}${m.fy}${m.tx}${m.ty}`)
+          );
+          const data = {
+            type: "XiangqiMaster_Save",
+            fen: engine.initialFen,
+            moves: coords,
+          };
+          const blob = new Blob([JSON.stringify(data)], {
+            type: "application/json",
+          });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "game.xqpro";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        },
+
+        exportText: () => {
+          let txt = "开始局面: " + engine.initialFen + "\n着法: \n";
+          for (let i = 0; i < engine.history.length; i += 2) {
+            const rm = engine.history[i];
+            const bm = engine.history[i + 1];
+            txt += `${i / 2 + 1}. ${rm.cnNotation}`;
+            if (bm) txt += ` ${bm.cnNotation}`;
+            txt += "\n";
+          }
+          document.getElementById("ioInput").value = txt;
+        },
+
+        loadFile: (e) => {
+          const f = e.target.files[0];
+          if (!f) return;
+          const r = new FileReader();
+          r.onload = (evt) => game.parse(evt.target.result);
+          r.readAsText(f);
+        },
+
+        loadFromInput: () => {
+          game.parse(document.getElementById("ioInput").value);
+        },
+
+        parse: (txt) => {
+          let fen = engine.initialFen,
+            moveStr = "";
+          try {
+            const json = JSON.parse(txt);
+            if (json.type === "XiangqiMaster_Save") {
+              fen = json.fen;
+              moveStr = json.moves;
+            }
+          } catch (e) {
+            const f = txt.match(/开始局面: (.*?)\n/);
+            if (f) fen = f[1];
+            const m = txt.match(/着法: (.*?)\n/);
+            if (m) moveStr = m[1];
+            if (!m && /^\d+$/.test(txt.trim())) moveStr = txt.trim();
+          }
+
+          engine.reset();
+          engine.loadFEN(fen);
+          engine.initialFen = fen;
+          for (let i = 0; i < moveStr.length; i += 4) {
+            const fx = parseInt(moveStr[i]),
+              fy = parseInt(moveStr[i + 1]),
+              tx = parseInt(moveStr[i + 2]),
+              ty = parseInt(moveStr[i + 3]);
+            const p = engine.getPiece(fx, fy);
+            if (p) {
+              const wxf = engine.getWXFNotation(fx, fy, tx, ty, p);
+              const cn = engine.getChineseNotation(fx, fy, tx, ty, p);
+              const captured = engine.getPiece(tx, ty);
+
+              engine.board[ty][tx] = p;
+              engine.board[fy][fx] = null;
+              engine.history.push({
+                fx,
+                fy,
+                tx,
+                ty,
+                captured,
+                p,
+                notation: wxf,
+                cnNotation: cn,
+              });
+              engine.turn = engine.turn === "r" ? "b" : "r";
+            }
+          }
+          selected = null;
+          validMoves = [];
+          render();
+          updateUI();
+          playSound("move");
         },
       };
 
-      // Initialize
-      game.init();
+      render();
+      updateUI();
     </script>
   </body>
 </html>
