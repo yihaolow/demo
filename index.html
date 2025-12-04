@@ -1,645 +1,1044 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xiangqi Master</title>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>Xiangqi Master: Final</title>
     <style>
-        :root {
-            --bg-gradient: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%);
-            --glass-panel: rgba(255, 255, 255, 0.15);
-            --glass-border: rgba(255, 255, 255, 0.2);
-            --board-color: #eecfa1;
-            --line-color: #5d4037;
-            
-            /* NATURAL HIGHLIGHTS (SUBTLER) */
-            --highlight-last: rgba(60, 100, 180, 0.3); 
-            --highlight-select: rgba(210, 105, 30, 0.3); /* Reduced opacity for selection color */
-            --highlight-valid: rgba(93, 64, 55, 0.2); /* Reduced opacity for target dots */
-            
-            --cell-size: 60px;
-            --piece-size: 52px;
-        }
+      :root {
+        --bg-grad: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+        --board-bg: #eecfa1;
+        --line-color: #5d4037;
+        --glass: rgba(255, 255, 255, 0.08);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --highlight: rgba(255, 215, 0, 0.4);
+        --selected: rgba(0, 255, 0, 0.5);
+        --red: #d63031;
+        --black: #2d3436;
+      }
 
-        body {
-            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg-gradient);
-            color: #fff;
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+      body {
+        margin: 0;
+        background: var(--bg-grad);
+        color: #ddd;
+        font-family: "Microsoft YaHei", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+      }
 
-        h1 {
-            font-weight: 200;
-            letter-spacing: 6px;
-            margin: 20px 0;
-            text-transform: uppercase;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
+      .container {
+        display: flex;
+        gap: 20px;
+        padding: 20px;
+        max-width: 1300px;
+        width: 100%;
+        height: 95vh;
+        box-sizing: border-box;
+      }
 
-        .main-container {
-            display: flex; gap: 40px; justify-content: center; align-items: flex-start;
-            flex-wrap: wrap; padding-bottom: 50px;
-        }
+      /* BOARD */
+      .board-frame {
+        flex: 0 0 auto; /* Don't grow */
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 8px;
+        border: 1px solid var(--glass-border);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
 
-        /* --- BOARD --- */
-        .board-frame {
-            padding: 15px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 8px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
-        }
+      .board {
+        position: relative;
+        width: 450px;
+        height: 500px;
+        background-color: var(--board-bg);
+        border-radius: 4px;
+        /* Wood Grain */
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E");
+        box-shadow: inset 0 0 20px rgba(93, 64, 55, 0.6);
+        user-select: none;
+      }
 
-        .board-wrapper {
-            position: relative;
-            width: calc(var(--cell-size) * 8 + var(--cell-size));
-            height: calc(var(--cell-size) * 9 + var(--cell-size));
-            background-color: var(--board-color);
-            /* Wood Grain Texture */
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.07'/%3E%3C/svg%3E");
-            border-radius: 4px;
-            user-select: none;
-            box-shadow: inset 0 0 20px rgba(93, 64, 55, 0.5);
-        }
+      /* SVG */
+      svg.grid {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+      .line {
+        stroke: var(--line-color);
+        stroke-width: 2;
+        fill: none;
+      }
+      .border {
+        stroke: var(--line-color);
+        stroke-width: 4;
+        fill: none;
+      }
+      .river-text {
+        font-family: "KaiTi", serif;
+        font-size: 34px;
+        fill: var(--line-color);
+        opacity: 0.8;
+        text-anchor: middle;
+        dominant-baseline: middle;
+        font-weight: bold;
+      }
 
-        svg.board-grid {
-            position: absolute; top: 30px; left: 30px;
-            width: calc(100% - 60px); height: calc(100% - 60px);
-            pointer-events: none;
-        }
-        
-        line, rect, path {
-            stroke: var(--line-color); stroke-width: 2; fill: none; stroke-linecap: square;
-        }
+      /* LAYERS */
+      .layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      .click-mask {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 100;
+        cursor: pointer;
+      }
+      #markerLayer {
+        z-index: 5;
+      }
+      #pieceLayer {
+        z-index: 10;
+      }
 
-        .river-text {
-            font-family: "KaiTi", "STKaiti", serif; font-size: 32px; fill: var(--line-color);
-            opacity: 0.6; text-anchor: middle; dominant-baseline: middle;
-        }
+      /* PIECES */
+      .piece {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        position: absolute;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: "KaiTi", serif;
+        font-size: 28px;
+        font-weight: bold;
+        background: #fdf5e6;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4),
+          inset 0 2px 5px rgba(255, 255, 255, 0.9);
+        transform: translate(-50%, -50%);
+        transition: top 0.2s, left 0.2s;
+      }
+      .piece.red {
+        color: var(--red);
+        border: 2px solid #c0392b;
+      }
+      .piece.black {
+        color: var(--black);
+        border: 2px solid #333;
+      }
 
-        /* --- LAYERS --- */
-        .interaction-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 10;
-        }
+      /* MARKERS */
+      .marker {
+        position: absolute;
+        transform: translate(-50%, -50%);
+      }
+      .last {
+        width: 48px;
+        height: 48px;
+        background: var(--highlight);
+        border-radius: 8px;
+      }
+      .select {
+        width: 50px;
+        height: 50px;
+        background: var(--selected);
+        border-radius: 50%;
+        box-shadow: 0 0 10px var(--selected);
+      }
+      .dot {
+        width: 14px;
+        height: 14px;
+        background: rgba(0, 180, 0, 0.7);
+        border-radius: 50%;
+      }
 
-        .cell {
-            position: absolute;
-            width: 11.11%; height: 10%;
-            cursor: pointer;
-            z-index: 15;
-        }
+      /* SIDEBAR */
+      .sidebar {
+        flex: 1;
+        min-width: 320px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        height: 100%;
+        overflow: hidden;
+      }
+      .panel {
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        border-radius: 8px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+      }
+      .history-panel {
+        flex: 2;
+        overflow: hidden;
+      } /* Takes more space */
 
-        /* Markers - Subtle Glow Style */
-        .marker {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none; 
-            z-index: 5;
-            transition: all 0.15s ease-out;
-        }
-        .marker.last { 
-            width: 12px; height: 12px; border-radius: 50%;
-            background-color: var(--highlight-last);
-            box-shadow: 0 0 5px var(--highlight-last);
-        }
-        
-        /* ADJUSTED: SUBTLER CIRCULAR SELECTION GLOW with Tighter Radius */
-        .marker.selected { 
-            width: 85%; /* Base element size slightly larger than the piece */
-            height: 85%; 
-            /* Soft radial gradient for internal glow (Reduced Opacity) */
-            background: radial-gradient(circle at center, rgba(255, 220, 180, 0.15) 0%, var(--highlight-select) 60%, transparent 100%);
-            border-radius: 50%; 
-            /* Subtle external shadow - tighter spread (10px spread gives the 1.5x effect) */
-            box-shadow: 0 0 1px 10px rgba(210, 105, 30, 0.15); 
-            opacity: 0.9;
-        }
-        
-        /* SUBTLER VALID MOVE DOT WITH GLOW */
-        .marker.valid {
-            width: 16px; height: 16px; border-radius: 50%;
-            background-color: var(--highlight-valid);
-            /* Soft amber/gold outer glow (Reduced Spread/Opacity) */
-            box-shadow: 0 0 3px 1px rgba(255, 193, 7, 0.08); 
-            border: 1px solid rgba(255, 255, 255, 0.2); /* Reduced Border Opacity */
-        }
+      .status {
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #ff6b6b;
+      }
 
-        /* --- PIECES --- */
-        .piece {
-            width: var(--piece-size); height: var(--piece-size);
-            border-radius: 50%;
-            position: absolute;
-            transform: translate(-50%, -50%);
-            z-index: 20;
-            display: flex; justify-content: center; align-items: center;
-            font-family: "KaiTi", "STKaiti", serif; font-size: 28px; font-weight: bold;
-            pointer-events: none; /* Allows clicks to pass to cell */
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.4);
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+      .history {
+        flex: 1;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 4px;
+        overflow-y: auto;
+        padding: 5px;
+        font-family: monospace;
+        font-size: 14px;
+      }
+      .row {
+        display: flex;
+        padding: 4px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .row span {
+        flex: 1;
+      }
+      .row span:first-child {
+        flex: 0 0 40px;
+        color: #888;
+      }
+      .row .red-mv {
+        color: #ff6b6b;
+        cursor: pointer;
+      }
+      .row .black-mv {
+        color: #ccc;
+        cursor: pointer;
+      }
+      .row .red-mv:hover,
+      .row .black-mv:hover {
+        text-decoration: underline;
+        color: #fff;
+      }
 
-        .piece.red { background: #fdfdfd; color: #c0392b; border: 2px solid #e57373; text-shadow: 0 1px 0 rgba(255,255,255,0.6); }
-        .piece.black { background: #262626; color: #eee; border: 2px solid #555; text-shadow: 0 -1px 0 rgba(0,0,0,0.8); }
-        .piece::before { content: ''; position: absolute; top: 3px; left: 3px; right: 3px; bottom: 3px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); }
-        .piece.black::before { border-color: rgba(255,255,255,0.15); }
+      /* CONTROLS */
+      .grid-btn {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      button {
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      button:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      .btn-red {
+        background: #c0392b;
+        border: none;
+      }
+      .btn-green {
+        background: #27ae60;
+        border: none;
+      }
 
-        /* --- SIDEBAR --- */
-        .sidebar { width: 340px; display: flex; flex-direction: column; gap: 20px; }
-        .glass-panel {
-            background: var(--glass-panel); border: 1px solid var(--glass-border);
-            border-radius: 8px; padding: 20px; backdrop-filter: blur(15px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .status-box { text-align: center; font-size: 1.2rem; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; font-weight: 600; }
-        .history-box {
-            height: 250px; overflow-y: auto; font-family: "Segoe UI", sans-serif; font-size: 14px;
-            background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; margin-bottom: 15px;
-        }
-        .move-row { display: flex; justify-content: space-between; padding: 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        
-        textarea {
-            width: 100%; height: 80px; background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;
-            padding: 8px; font-family: monospace; resize: none; margin-bottom: 10px; outline: none;
-        }
-        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
-        button {
-            flex: 1; padding: 10px; background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px;
-            cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.2s;
-        }
-        button:hover { background: rgba(255,255,255,0.25); }
+      textarea {
+        width: 100%;
+        height: 100px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid #555;
+        color: #eee;
+        resize: none;
+        margin-bottom: 5px;
+        font-family: monospace;
+        font-size: 11px;
+        box-sizing: border-box;
+      }
 
-        #splash {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
-            display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; z-index: 100;
+      /* SPLASH */
+      #splash {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        font-size: 5rem;
+        font-family: "KaiTi";
+        font-weight: 900;
+        color: #ff4757;
+        text-shadow: 0 5px 20px black;
+        pointer-events: none;
+        z-index: 200;
+        opacity: 0;
+        -webkit-text-stroke: 2px white;
+        white-space: nowrap;
+      }
+      .pop {
+        animation: popAnim 1.2s ease-out forwards;
+      }
+      @keyframes popAnim {
+        0% {
+          transform: translate(-50%, -50%) scale(0.5);
+          opacity: 0;
         }
-        #splash.active { opacity: 1; }
-        .splash-text {
-            font-family: "KaiTi", serif; font-size: 6rem; color: #ff3b30;
-            background: rgba(0,0,0,0.9); padding: 40px 80px; border-radius: 20px;
-            text-shadow: 0 0 30px #d32f2f; transform: scale(0.5); border: 2px solid #d32f2f;
+        20% {
+          transform: translate(-50%, -50%) scale(1.2);
+          opacity: 1;
         }
-        #splash.active .splash-text { transform: scale(1); }
-        
-        /* File Input Hidden */
-        #file-selector { display: none; }
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 0;
+        }
+      }
+
+      @media (max-width: 850px) {
+        .container {
+          flex-direction: column;
+          height: auto;
+          overflow-y: auto;
+        }
+        .board {
+          width: 360px;
+          height: 400px;
+        }
+        .sidebar {
+          width: 100%;
+          max-height: 500px;
+        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <div class="container">
+      <div class="board-frame">
+        <div class="board" id="board">
+          <svg class="grid" viewBox="0 0 450 500">
+            <rect x="25" y="25" width="400" height="450" class="border" />
 
-    <h1>Xiangqi Master</h1>
+            <g class="line">
+              <line x1="25" y1="75" x2="425" y2="75" />
+              <line x1="25" y1="125" x2="425" y2="125" />
+              <line x1="25" y1="175" x2="425" y2="175" />
+              <line x1="25" y1="225" x2="425" y2="225" />
+              <line x1="25" y1="275" x2="425" y2="275" />
+              <line x1="25" y1="325" x2="425" y2="325" />
+              <line x1="25" y1="375" x2="425" y2="375" />
+              <line x1="25" y1="425" x2="425" y2="425" />
+            </g>
 
-    <div class="main-container">
-        <div class="board-frame">
-            <div class="board-wrapper">
-                <svg class="board-grid" viewBox="0 0 400 450">
-                    <rect x="0" y="0" width="400" height="450" stroke-width="4" />
-                    <line x1="50" y1="0" x2="50" y2="200" /><line x1="50" y1="250" x2="50" y2="450" />
-                    <line x1="100" y1="0" x2="100" y2="200" /><line x1="100" y1="250" x2="100" y2="450" />
-                    <line x1="150" y1="0" x2="150" y2="200" /><line x1="150" y1="250" x2="150" y2="450" />
-                    <line x1="200" y1="0" x2="200" y2="200" /><line x1="200" y1="250" x2="200" y2="450" />
-                    <line x1="250" y1="0" x2="250" y2="200" /><line x1="250" y1="250" x2="250" y2="450" />
-                    <line x1="300" y1="0" x2="300" y2="200" /><line x1="300" y1="250" x2="300" y2="450" />
-                    <line x1="350" y1="0" x2="350" y2="200" /><line x1="350" y1="250" x2="350" y2="450" />
-                    <line x1="0" y1="50" x2="400" y2="50" /><line x1="0" y1="100" x2="400" y2="100" />
-                    <line x1="0" y1="150" x2="400" y2="150" /><line x1="0" y1="200" x2="400" y2="200" />
-                    <line x1="0" y1="250" x2="400" y2="250" /><line x1="0" y1="300" x2="400" y2="300" />
-                    <line x1="0" y1="350" x2="400" y2="350" /><line x1="0" y1="400" x2="400" y2="400" />
-                    <line x1="150" y1="0" x2="250" y2="100" /><line x1="250" y1="0" x2="150" y2="100" />
-                    <line x1="150" y1="350" x2="250" y2="450" /><line x1="250" y1="350" x2="150" y2="450" />
-                    <text x="100" y="225" class="river-text">楚 河</text>
-                    <text x="300" y="225" class="river-text">漢 界</text>
-                </svg>
-                <div class="interaction-layer" id="gridLayer"></div>
-            </div>
+            <g class="line">
+              <line x1="225" y1="25" x2="225" y2="225" />
+              <line x1="225" y1="275" x2="225" y2="475" />
+
+              <line x1="75" y1="25" x2="75" y2="225" />
+              <line x1="75" y1="275" x2="75" y2="475" />
+              <line x1="125" y1="25" x2="125" y2="225" />
+              <line x1="125" y1="275" x2="125" y2="475" />
+              <line x1="175" y1="25" x2="175" y2="225" />
+              <line x1="175" y1="275" x2="175" y2="475" />
+              <line x1="275" y1="25" x2="275" y2="225" />
+              <line x1="275" y1="275" x2="275" y2="475" />
+              <line x1="325" y1="25" x2="325" y2="225" />
+              <line x1="325" y1="275" x2="325" y2="475" />
+              <line x1="375" y1="25" x2="375" y2="225" />
+              <line x1="375" y1="275" x2="375" y2="475" />
+            </g>
+
+            <g class="line">
+              <line x1="175" y1="25" x2="275" y2="125" />
+              <line x1="275" y1="25" x2="175" y2="125" />
+              <line x1="175" y1="375" x2="275" y2="475" />
+              <line x1="275" y1="375" x2="175" y2="475" />
+            </g>
+
+            <text x="110" y="250" class="river-text">楚 河</text>
+            <text x="340" y="250" class="river-text">漢 界</text>
+          </svg>
+
+          <div id="markerLayer" class="layer"></div>
+          <div id="pieceLayer" class="layer"></div>
+          <div class="click-mask" onclick="ui.click(event)"></div>
+          <div id="splash">將 軍</div>
         </div>
+      </div>
 
-        <div class="sidebar">
-            <div class="glass-panel">
-                <div id="status" class="status-box">Red's Turn</div>
-                <div id="moveHistory" class="history-box"></div>
-                <div class="btn-row">
-                    <button style="background:#c0392b" onclick="game.reset()">Reset</button>
-                    <button onclick="game.undo()">Undo</button>
-                </div>
-            </div>
-
-            <div class="glass-panel">
-                <div style="font-size:0.8rem; margin-bottom:5px; opacity:0.7;">Game Data (Text Export)</div>
-                <textarea id="ioInput" placeholder="Exported text will appear here..."></textarea>
-                
-                <input type="file" id="file-selector" accept=".xqpro,.txt" onchange="game.loadFile(event)">
-                
-                <div class="btn-row">
-                    <button style="background:#27ae60" onclick="document.getElementById('file-selector').click()">Load .xqpro</button>
-                    <button onclick="game.exportXQPro()">Save .xqpro</button>
-                </div>
-                 <div class="btn-row" style="margin-top:10px">
-                    <button onclick="game.loadFromInput()">Load Text/DPXQ</button>
-                    <button onclick="game.exportText()">Export Text</button>
-                </div>
-            </div>
+      <div class="sidebar">
+        <div class="panel history-panel">
+          <div id="status" class="status">Red to Move</div>
+          <div class="grid-btn">
+            <button onclick="game.newGame()">New Game</button>
+            <button onclick="game.undo()">Undo</button>
+            <button onclick="ui.doFlip()">⇅ Flip View</button>
+            <button onclick="ui.doReflect()">⇄ Reflect</button>
+          </div>
+          <div id="history" class="history"></div>
         </div>
+        <div class="panel">
+          <textarea
+            id="fenBox"
+            placeholder="Paste FEN/DhtmlXQ or Export here..."
+          ></textarea>
+          <div class="grid-btn">
+            <button onclick="game.load()">Load Input</button>
+            <button class="btn-green" onclick="game.export()">Copy Text</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div id="splash"><div class="splash-text">將軍</div></div>
+    <script>
+      const sfx = {
+        play(f, t) {
+          const c = new (window.AudioContext || window.webkitAudioContext)();
+          const o = c.createOscillator();
+          const g = c.createGain();
+          o.type = t;
+          o.frequency.setValueAtTime(f, c.currentTime);
+          g.gain.setValueAtTime(0.3, c.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.01, c.currentTime + 0.1);
+          o.connect(g);
+          g.connect(c.destination);
+          o.start();
+          o.stop(c.currentTime + 0.1);
+        },
+      };
 
-<script>
-/** AUDIO */
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playSound(type) {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const t = audioCtx.currentTime;
-    const mkOsc = (freq, type, dur, vol) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type; osc.frequency.setValueAtTime(freq, t);
-        gain.gain.setValueAtTime(vol, t); gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(t); osc.stop(t + dur);
-    };
-    if (type === 'move' || type === 'capture') { mkOsc(200, 'sine', 0.15, 0.5); mkOsc(50, 'square', 0.05, 0.2); }
-    else if (type === 'check') { mkOsc(800, 'triangle', 0.6, 0.3); }
-}
+      /* NOTATION CONSTANTS */
+      const CN_NUMS = [
+        "",
+        "一",
+        "二",
+        "三",
+        "四",
+        "五",
+        "六",
+        "七",
+        "八",
+        "九",
+      ];
+      const CN_DIGITS = [
+        "",
+        "１",
+        "２",
+        "３",
+        "４",
+        "５",
+        "６",
+        "７",
+        "８",
+        "９",
+      ];
+      const CN_PIECES = {
+        K: "帅",
+        A: "仕",
+        E: "相",
+        N: "马",
+        R: "车",
+        C: "炮",
+        P: "兵",
+        k: "将",
+        a: "士",
+        e: "象",
+        n: "马",
+        r: "车",
+        c: "炮",
+        p: "卒",
+      };
+      const CN_DIR = { "+": "进", "-": "退", "=": "平" };
 
-/** CHINESE NOTATION DATA (For Text Export Only) */
-const CN_CHARS = { 'rR':'俥','rN':'傌','rE':'相','rA':'仕','rK':'帥','rC':'炮','rP':'兵', 'bR':'車','bN':'馬','bE':'象','bA':'士','bK':'將','bC':'炮','bP':'卒', '+':'进','-':'退','=':'平', 'F':'前','M':'中','B':'后' };
-const CN_NUMS = ['零','一','二','三','四','五','六','七','八','九'];
-const CN_DIGITS_FULL = ['０','１','２','３','４','５','６','７','８','９'];
-function toCNFile(n, isRed) { return isRed ? CN_NUMS[n] : CN_DIGITS_FULL[n]; }
-function toCNNum(n, isRed) { return isRed ? CN_NUMS[n] : CN_DIGITS_FULL[n]; }
+      class Engine {
+        constructor() {
+          this.reset();
+        }
+        reset() {
+          this.board = Array(10)
+            .fill(null)
+            .map(() => Array(9).fill(null));
+          const init = [
+            ["bR", "bN", "bE", "bA", "bK", "bA", "bE", "bN", "bR"],
+            [null, null, null, null, null, null, null, null, null],
+            [null, "bC", null, null, null, null, null, "bC", null],
+            ["bP", null, "bP", null, "bP", null, "bP", null, "bP"],
+            [null, null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null, null],
+            ["rP", null, "rP", null, "rP", null, "rP", null, "rP"],
+            [null, "rC", null, null, null, null, null, "rC", null],
+            [null, null, null, null, null, null, null, null, null],
+            ["rR", "rN", "rE", "rA", "rK", "rA", "rE", "rN", "rR"],
+          ];
+          init.forEach((r, y) => r.forEach((p, x) => (this.board[y][x] = p)));
+          this.turn = "r";
+          this.history = [];
+          this.idx = 0;
+        }
 
-class XiangqiEngine {
-    constructor() { this.reset(); }
-    reset() {
-        this.board = Array(10).fill(null).map(() => Array(9).fill(null));
-        this.turn = 'r';
-        this.history = [];
-        this.initialFen = "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1";
-        this.loadFEN(this.initialFen);
-    }
-    getPiece(x, y) { if(x<0||x>8||y<0||y>9)return null; return this.board[y][x]; }
-    loadFEN(fen) {
-        this.board = Array(10).fill(null).map(() => Array(9).fill(null));
-        const parts = fen.split(' ');
-        const rows = parts[0].split('/');
-        const map = {'R':'rR','N':'rN','B':'rE','A':'rA','K':'rK','C':'rC','P':'rP','r':'bR','n':'bN','b':'bE','a':'bA','k':'bK','c':'bC','p':'bP'};
-        for(let y=0; y<10; y++) {
-            let x = 0; const row = rows[y]||"";
-            for(let i=0; i<row.length; i++) {
-                const c = row[i];
-                if(!isNaN(c)) x += parseInt(c); else { if(map[c]) this.board[y][x] = map[c]; x++; }
+        getPiece(x, y) {
+          if (x < 0 || x > 8 || y < 0 || y > 9) return null;
+          return this.board[y][x];
+        }
+
+        validate(fx, fy, tx, ty, p) {
+          if (fx === tx && fy === ty) return false;
+          const tgt = this.getPiece(tx, ty);
+          if (tgt && tgt[0] === p[0]) return false;
+          const dx = tx - fx,
+            dy = ty - fy,
+            adx = Math.abs(dx),
+            ady = Math.abs(dy);
+          const type = p[1],
+            red = p[0] === "r";
+          switch (type) {
+            case "K":
+              return (
+                tx >= 3 &&
+                tx <= 5 &&
+                (red ? ty >= 7 : ty <= 2) &&
+                adx + ady === 1
+              );
+            case "A":
+              return (
+                tx >= 3 &&
+                tx <= 5 &&
+                (red ? ty >= 7 : ty <= 2) &&
+                adx === 1 &&
+                ady === 1
+              );
+            case "E":
+              return (
+                (red ? ty >= 5 : ty <= 4) &&
+                adx === 2 &&
+                ady === 2 &&
+                !this.getPiece(fx + dx / 2, fy + dy / 2)
+              );
+            case "N":
+              if (adx === 1 && ady === 2)
+                return !this.getPiece(fx, fy + (dy > 0 ? 1 : -1));
+              if (adx === 2 && ady === 1)
+                return !this.getPiece(fx + (dx > 0 ? 1 : -1), fy);
+              return false;
+            case "R":
+              return (dx === 0 || dy === 0) && this.count(fx, fy, tx, ty) === 0;
+            case "C":
+              const c = this.count(fx, fy, tx, ty);
+              return (dx === 0 || dy === 0) && (tgt ? c === 1 : c === 0);
+            case "P":
+              const fwd = red ? -1 : 1;
+              const cross = red ? fy <= 4 : fy >= 5;
+              return (
+                (dy === fwd && dx === 0) || (cross && dy === 0 && adx === 1)
+              );
+          }
+          return false;
+        }
+
+        count(x1, y1, x2, y2) {
+          let c = 0,
+            dx = Math.sign(x2 - x1),
+            dy = Math.sign(y2 - y1);
+          let x = x1 + dx,
+            y = y1 + dy,
+            safe = 0;
+          while ((x !== x2 || y !== y2) && safe++ < 20) {
+            if (this.getPiece(x, y)) c++;
+            x += dx;
+            y += dy;
+          }
+          return c;
+        }
+
+        inCheck(turn) {
+          let k = null;
+          for (let y = 0; y < 10; y++)
+            for (let x = 0; x < 9; x++)
+              if (this.board[y][x] === turn + "K") k = { x, y };
+          if (!k) return true;
+          const opp = turn === "r" ? "b" : "r";
+          let ok = null;
+          for (let y = 0; y < 10; y++)
+            for (let x = 0; x < 9; x++)
+              if (this.board[y][x] === opp + "K") ok = { x, y };
+          if (ok && k.x === ok.x && this.count(k.x, k.y, ok.x, ok.y) === 0)
+            return true;
+          for (let y = 0; y < 10; y++)
+            for (let x = 0; x < 9; x++) {
+              let p = this.board[y][x];
+              if (p && p[0] === opp && this.validate(x, y, k.x, k.y, p))
+                return true;
             }
+          return false;
         }
-        this.turn = (parts[1] === 'b') ? 'b' : 'r';
-        if(this.history.length === 0) this.initialFen = fen;
-    }
-    getFEN() {
-        let fen = ""; const map = {'rR':'R','rN':'N','rE':'B','rA':'A','rK':'K','rC':'C','rP':'P','bR':'r','bN':'n','bE':'b','bA':'a','bK':'k','bC':'c','bP':'p'};
-        for(let y=0; y<10; y++) {
-            let empty = 0;
-            for(let x=0; x<9; x++) {
-                const p = this.board[y][x];
-                if(!p) empty++; else { if(empty>0) { fen+=empty; empty=0; } fen+=map[p]; }
-            }
-            if(empty>0) fen+=empty; if(y<9) fen+="/";
-        }
-        return fen + " " + (this.turn==='r'?'w':'b') + " - - 0 1"; 
-    }
-    move(fx, fy, tx, ty) {
-        const p = this.getPiece(fx, fy);
-        if(!p || p[0] !== this.turn) return { success: false };
-        if(!this.validate(fx, fy, tx, ty, p)) return { success: false };
 
-        const wxf = this.getWXFNotation(fx, fy, tx, ty, p);
-        const cn = this.getChineseNotation(fx, fy, tx, ty, p);
-        
-        const captured = this.board[ty][tx];
-        this.board[ty][tx] = p;
-        this.board[fy][fx] = null;
-        
-        if(this.isInCheck(this.turn)) {
-            this.board[fy][fx] = p; this.board[ty][tx] = captured;
-            return { success: false };
+        move(fx, fy, tx, ty) {
+          if (this.idx !== this.history.length) return false;
+          let p = this.board[fy][fx];
+          if (!p || p[0] !== this.turn) return false;
+          if (!this.validate(fx, fy, tx, ty, p)) return false;
+
+          let cap = this.board[ty][tx];
+          this.board[ty][tx] = p;
+          this.board[fy][fx] = null;
+
+          if (this.inCheck(this.turn)) {
+            this.board[fy][fx] = p;
+            this.board[ty][tx] = cap;
+            return false;
+          }
+
+          let mvStr = `${fx}${fy}${tx}${ty}`;
+          this.history.push({ fx, fy, tx, ty, p, cap, mv: mvStr });
+          this.idx++;
+          this.turn = this.turn === "r" ? "b" : "r";
+          return true;
         }
-        
-        this.history.push({ fx, fy, tx, ty, captured, p, notation: wxf, cnNotation: cn });
-        this.turn = (this.turn==='r')?'b':'r';
-        return { success: true, capture: !!captured, check: this.isInCheck(this.turn) };
-    }
-    undo() {
-        if(!this.history.length) return false;
-        const last = this.history.pop();
-        this.board[last.fy][last.fx] = last.p;
-        this.board[last.ty][last.tx] = last.captured;
-        this.turn = last.p[0];
-        return true;
-    }
-    getValidMoves(fx, fy) {
-        const p = this.getPiece(fx, fy);
-        if (!p || p[0] !== this.turn) return [];
-        const moves = [];
-        for (let ty = 0; ty < 10; ty++) {
-            for (let tx = 0; tx < 9; tx++) {
-                if (this.validate(fx, fy, tx, ty, p)) {
-                    const captured = this.getPiece(tx, ty);
-                    this.board[ty][tx] = p; this.board[fy][fx] = null;
-                    if (!this.isInCheck(p[0])) moves.push({ x: tx, y: ty });
-                    this.board[fy][fx] = p; this.board[ty][tx] = captured;
+      }
+
+      /* --- UI --- */
+      const ui = {
+        flip: false,
+        reflect: false,
+        sel: null,
+        init() {
+          this.render();
+          this.updateInfo();
+        },
+        doFlip() {
+          this.flip = !this.flip;
+          this.render();
+        },
+        doReflect() {
+          this.reflect = !this.reflect;
+          this.render();
+          this.updateInfo();
+        },
+
+        toPx(x, y) {
+          let rx = this.reflect ? 8 - x : x;
+          if (this.flip) {
+            rx = 8 - rx;
+            ry = 9 - y;
+          } else {
+            ry = y;
+          }
+          return { left: rx * 50 + 25, top: ry * 50 + 25 };
+        },
+
+        toLog(cx, cy) {
+          const r = document.getElementById("board").getBoundingClientRect();
+          const sx = 450 / r.width,
+            sy = 500 / r.height;
+          let x = Math.round(((cx - r.left) * sx - 25) / 50);
+          let y = Math.round(((cy - r.top) * sy - 25) / 50);
+          if (x < 0 || x > 8 || y < 0 || y > 9) return null;
+          if (this.flip) {
+            x = 8 - x;
+            y = 9 - y;
+          }
+          if (this.reflect) x = 8 - x;
+          return { x, y };
+        },
+
+        click(e) {
+          if (game.eng.idx !== game.eng.history.length) return;
+          const c = this.toLog(e.clientX, e.clientY);
+          if (!c) return;
+          const p = game.eng.getPiece(c.x, c.y);
+
+          if (this.sel) {
+            if (game.eng.move(this.sel.x, this.sel.y, c.x, c.y)) {
+              sfx.play(300, "square");
+              this.sel = null;
+              this.render();
+              this.updateInfo();
+              if (game.eng.inCheck(game.eng.turn)) ui.splash("將 軍");
+            } else if (p && p[0] === game.eng.turn) {
+              this.sel = c;
+              sfx.play(150, "sine");
+              this.render();
+            } else {
+              this.sel = null;
+              this.render();
+            }
+          } else if (p && p[0] === game.eng.turn) {
+            this.sel = c;
+            sfx.play(150, "sine");
+            this.render();
+          }
+        },
+
+        render() {
+          const pL = document.getElementById("pieceLayer");
+          const mL = document.getElementById("markerLayer");
+          pL.innerHTML = "";
+          mL.innerHTML = "";
+
+          let board = game.eng.board;
+          if (game.eng.idx < game.eng.history.length) {
+            let tmp = new Engine();
+            if (game.startFen) game.loadFenTo(game.startFen, tmp);
+            for (let i = 0; i < game.eng.idx; i++) {
+              let m = game.eng.history[i];
+              tmp.board[m.ty][m.tx] = tmp.board[m.fy][m.fx];
+              tmp.board[m.fy][m.fx] = null;
+            }
+            board = tmp.board;
+          }
+
+          const map = {
+            rK: "帥",
+            rA: "仕",
+            rE: "相",
+            rN: "傌",
+            rR: "俥",
+            rC: "炮",
+            rP: "兵",
+            bK: "將",
+            bA: "士",
+            bE: "象",
+            bN: "馬",
+            bR: "車",
+            bC: "炮",
+            bP: "卒",
+          };
+
+          for (let y = 0; y < 10; y++)
+            for (let x = 0; x < 9; x++) {
+              let p = board[y][x];
+              let pos = this.toPx(x, y);
+
+              let last = game.eng.history[game.eng.idx - 1];
+              if (
+                last &&
+                ((last.fx === x && last.fy === y) ||
+                  (last.tx === x && last.ty === y))
+              ) {
+                let m = document.createElement("div");
+                m.className = "marker last";
+                m.style.left = pos.left + "px";
+                m.style.top = pos.top + "px";
+                mL.appendChild(m);
+              }
+
+              if (this.sel && this.sel.x === x && this.sel.y === y) {
+                let m = document.createElement("div");
+                m.className = "marker select";
+                m.style.left = pos.left + "px";
+                m.style.top = pos.top + "px";
+                mL.appendChild(m);
+                if (game.eng.idx === game.eng.history.length) {
+                  for (let ty = 0; ty < 10; ty++)
+                    for (let tx = 0; tx < 9; tx++) {
+                      let cap = game.eng.board[ty][tx];
+                      game.eng.board[ty][tx] = p;
+                      game.eng.board[y][x] = null;
+                      let valid =
+                        game.eng.validate(x, y, tx, ty, p) &&
+                        !game.eng.inCheck(p[0]);
+                      game.eng.board[y][x] = p;
+                      game.eng.board[ty][tx] = cap;
+                      if (valid) {
+                        let dPos = this.toPx(tx, ty);
+                        let d = document.createElement("div");
+                        d.className = "marker dot";
+                        d.style.left = dPos.left + "px";
+                        d.style.top = dPos.top + "px";
+                        mL.appendChild(d);
+                      }
+                    }
                 }
+              }
+
+              if (p) {
+                let d = document.createElement("div");
+                d.className = `piece ${p[0] === "r" ? "red" : "black"}`;
+                d.innerText = map[p];
+                d.style.left = pos.left + "px";
+                d.style.top = pos.top + "px";
+                pL.appendChild(d);
+              }
             }
-        }
-        return moves;
-    }
-    validate(fx, fy, tx, ty, p) {
-        if(fx===tx && fy===ty) return false;
-        const target = this.getPiece(tx, ty);
-        if(target && target[0] === p[0]) return false;
-        const dx = tx-fx, dy = ty-fy, ax = Math.abs(dx), ay = Math.abs(dy);
-        const type = p[1], isRed = (p[0]==='r');
-        switch(type) {
-            case 'K': return (tx>=3 && tx<=5 && (isRed ? ty>=7 : ty<=2) && (ax+ay===1));
-            case 'A': return (tx>=3 && tx<=5 && (isRed ? ty>=7 : ty<=2) && ax===1 && ay===1);
-            case 'E': return ((isRed ? ty>=5 : ty<=4) && ax===2 && ay===2 && !this.getPiece(fx+dx/2, fy+dy/2));
-            case 'N': return ((ax===1 && ay===2 && !this.getPiece(fx, fy+(dy>0?1:-1))) || (ax===2 && ay===1 && !this.getPiece(fx+(dx>0?1:-1), fy)));
-            case 'R': return ((dx===0 || dy===0) && this.countObs(fx, fy, tx, ty)===0);
-            case 'C': { const obs = this.countObs(fx, fy, tx, ty); return (dx===0 || dy===0) && (target ? obs===1 : obs===0); }
-            case 'P': {
-                const forward = isRed ? -1 : 1; const crossed = isRed ? (fy<=4) : (fy>=5);
-                return (dy===forward && dx===0) || (crossed && dy===0 && ax===1);
+        },
+
+        updateInfo() {
+          const list = document.getElementById("history");
+          list.innerHTML = "";
+
+          let tmp = new Engine();
+          if (game.startFen) game.loadFenTo(game.startFen, tmp);
+
+          for (let i = 0; i < game.eng.history.length; i += 2) {
+            let h1 = game.eng.history[i];
+            let h2 = game.eng.history[i + 1];
+
+            let not1 = game.genNotation(tmp, h1, this.reflect);
+            // Advance board for h1
+            tmp.board[h1.ty][h1.tx] = tmp.board[h1.fy][h1.fx];
+            tmp.board[h1.fy][h1.fx] = null;
+
+            let not2 = "";
+            if (h2) {
+              not2 = game.genNotation(tmp, h2, this.reflect);
+              tmp.board[h2.ty][h2.tx] = tmp.board[h2.fy][h2.fx];
+              tmp.board[h2.fy][h2.fx] = null;
             }
-        }
-        return false;
-    }
-    countObs(x1, y1, x2, y2) {
-        let cnt = 0, dx = Math.sign(x2 - x1), dy = Math.sign(y2 - y1);
-        let x = x1 + dx, y = y1 + dy;
-        if (dx !== 0 && dy !== 0) return -1;
-        let safe = 0;
-        while(x !== x2 || y !== y2) { 
-            if(this.getPiece(x,y)) cnt++; x += dx; y += dy;
-            if(safe++ > 20) return 99;
-        }
-        return cnt;
-    }
-    isInCheck(c) {
-        const k = this.findPiece(c+'K'); if(!k) return true;
-        const op = (c==='r'?'b':'r');
-        const opK = this.findPiece(op+'K');
-        if(opK && k.x===opK.x && this.countObs(k.x, k.y, opK.x, opK.y)===0) return true;
-        for(let y=0; y<10; y++) for(let x=0; x<9; x++) {
-            const p = this.board[y][x];
-            if(p && p[0]===op && this.validate(x,y,k.x,k.y,p)) return true;
-        }
-        return false;
-    }
-    findPiece(code) { for(let y=0; y<10; y++) for(let x=0; x<9; x++) if(this.board[y][x]===code) return {x,y}; return null; }
 
-    /* --- NOTATION LOGIC --- */
-    
-    // WXF (English) for Reader UI
-    getWXFNotation(fx, fy, tx, ty, p) {
-        const isRed = (p[0] === 'r');
-        const startFile = isRed ? (9 - fx) : (fx + 1);
-        const endFile = isRed ? (9 - tx) : (tx + 1);
-        
-        const col = [];
-        for(let y=0; y<10; y++) {
-            const op = this.getPiece(fx, y);
-            if(op === p) col.push(y);
-        }
-        col.sort((a,b) => isRed ? (a-b) : (b-a));
+            let div = document.createElement("div");
+            div.className = "row";
 
-        let prefix = "";
-        let useFile = true;
-        const typeChar = p[1] === 'N' ? 'H' : p[1];
+            let num = document.createElement("span");
+            num.innerText = i / 2 + 1 + ".";
 
-        if (col.length > 1) {
-            useFile = false;
-            const idx = col.indexOf(fy);
-            if (col.length === 2) prefix = (idx === 0) ? "+" : "-";
-            else prefix = (idx + 1).toString();
-        }
+            let m1 = document.createElement("span");
+            m1.className = "red-mv";
+            m1.innerText = not1;
+            m1.onclick = () => game.goto(i + 1);
+            if (game.eng.idx === i + 1) m1.style.fontWeight = "bold";
 
-        let op = "";
-        const dy = ty - fy;
-        if (dy === 0) op = ".";
-        else if ((isRed && dy < 0) || (!isRed && dy > 0)) op = "+";
-        else op = "-";
+            let m2 = document.createElement("span");
+            m2.className = "black-mv";
+            m2.innerText = not2;
+            if (h2) m2.onclick = () => game.goto(i + 2);
+            if (game.eng.idx === i + 2) m2.style.fontWeight = "bold";
 
-        let target = "";
-        if (['R','C','P','K'].includes(p[1]) && op !== ".") {
-            target = Math.abs(dy).toString();
-        } else {
-            target = endFile.toString();
-        }
+            div.appendChild(num);
+            div.appendChild(m1);
+            div.appendChild(m2);
+            list.appendChild(div);
+          }
+          list.scrollTop = list.scrollHeight;
+        },
 
-        return useFile ? `${typeChar}${startFile}${op}${target}` : `${prefix}${typeChar}${op}${target}`;
-    }
+        splash(txt) {
+          let el = document.getElementById("splash");
+          el.innerText = txt;
+          el.classList.remove("pop");
+          void el.offsetWidth;
+          el.classList.add("pop");
+        },
+      };
 
-    // Chinese for Text Export
-    getChineseNotation(fx, fy, tx, ty, p) {
-        const isRed = (p[0] === 'r');
-        const pName = CN_CHARS[p];
-        const srcFile = isRed ? (9 - fx) : (fx + 1);
-        const dstFile = isRed ? (9 - tx) : (tx + 1);
+      /* --- CTRL --- */
+      const game = {
+        eng: new Engine(),
+        startFen:
+          "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1",
 
-        const col = [];
-        for(let y=0; y<10; y++) { const op = this.getPiece(fx, y); if(op === p) col.push(y); }
-        col.sort((a,b) => isRed ? (a-b) : (b-a));
+        newGame() {
+          if (!confirm("Reset from Scratch?")) return;
+          this.eng.reset();
+          this.startFen =
+            "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1";
+          document.getElementById("fenBox").value = "";
+          ui.sel = null;
+          ui.flip = false;
+          ui.reflect = false;
+          ui.init();
+          sfx.play(400, "sawtooth");
+        },
 
-        let fileStr = "";
-        if(col.length > 1) {
-            const idx = col.indexOf(fy);
-            if(col.length === 2) fileStr = (idx === 0) ? CN_CHARS['F'] : CN_CHARS['B'];
-            else if(col.length === 3) fileStr = (idx === 0) ? CN_CHARS['F'] : (idx === 1 ? CN_CHARS['M'] : CN_CHARS['B']);
-            else fileStr = isRed ? CN_NUMS[idx+1] : CN_DIGITS_FULL[idx+1];
-            fileStr += pName;
-        } else {
-            fileStr = pName + toCNFile(srcFile, isRed);
-        }
+        reset() {
+          this.newGame(); // Alias
+        },
 
-        let dirStr = "", destStr = "";
-        const dy = ty - fy;
-        if(dy === 0) {
-            dirStr = CN_CHARS['='];
-            destStr = toCNNum(dstFile, isRed);
-        } else {
-            dirStr = ((isRed && dy < 0) || (!isRed && dy > 0)) ? CN_CHARS['+'] : CN_CHARS['-'];
-            if(['R','C','P','K'].includes(p[1])) destStr = toCNNum(Math.abs(dy), isRed);
-            else destStr = toCNNum(dstFile, isRed);
-        }
-        return fileStr + dirStr + destStr;
-    }
-}
+        undo() {
+          if (this.eng.idx > 0 && this.eng.idx === this.eng.history.length) {
+            this.eng.history.pop();
+            this.eng.idx--;
+            this.eng.turn = this.eng.turn === "r" ? "b" : "r";
+            // Revert board
+            let tmp = new Engine();
+            this.loadFenTo(this.startFen, tmp);
+            this.eng.history.forEach((m) => {
+              tmp.board[m.ty][m.tx] = tmp.board[m.fy][m.fx];
+              tmp.board[m.fy][m.fx] = null;
+            });
+            this.eng.board = tmp.board;
+            ui.sel = null;
+            ui.render();
+            ui.updateInfo();
+          }
+        },
 
-/** UI */
-const engine = new XiangqiEngine();
-let selected = null;
-let validMoves = [];
-const chars = {'rK':'帥','rA':'仕','rE':'相','rN':'傌','rR':'俥','rC':'炮','rP':'兵','bK':'將','bA':'士','bE':'象','bN':'馬','bR':'車','bC':'炮','bP':'卒'};
+        goto(i) {
+          this.eng.idx = i;
+          ui.sel = null;
+          ui.render();
+          ui.updateInfo(); // Refresh bold status
+        },
 
-function render() {
-    const layer = document.getElementById('gridLayer');
-    layer.innerHTML = '';
-    // 1. Cells
-    for(let y=0; y<10; y++) {
-        for(let x=0; x<9; x++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.style.left = (x * 11.11) + '%';
-            cell.style.top = (y * 10) + '%';
-            cell.onclick = () => onCellClick(x, y);
-            layer.appendChild(cell);
-        }
-    }
-    // 2. Markers
-    if(engine.history.length) {
-        const last = engine.history[engine.history.length-1];
-        addMarker(layer, last.fx, last.fy, 'marker last');
-        addMarker(layer, last.tx, last.ty, 'marker last');
-    }
-    if(selected) addMarker(layer, selected.x, selected.y, 'marker selected');
-    validMoves.forEach(m => addMarker(layer, m.x, m.y, 'marker valid'));
-    // 3. Pieces
-    for(let y=0; y<10; y++) {
-        for(let x=0; x<9; x++) {
-            const p = engine.getPiece(x,y);
-            if(p) {
-                const div = document.createElement('div');
-                div.className = `piece ${p[0]==='r'?'red':'black'}`;
-                div.innerText = chars[p];
-                div.style.left = (x * 11.11 + 5.55) + '%';
-                div.style.top = (y * 10 + 5) + '%';
-                layer.appendChild(div);
+        load() {
+          let txt = document.getElementById("fenBox").value.trim();
+          if (!txt) return;
+          let fen = txt;
+          if (txt.includes("[DhtmlXQ]")) {
+            let f = txt.match(/_fen](.*?)\[/);
+            if (f) fen = f[1];
+          }
+          if (fen.includes("/")) {
+            this.eng.reset();
+            this.loadFenTo(fen, this.eng);
+            this.startFen = fen;
+            ui.init();
+            sfx.play(500, "square");
+          }
+        },
+
+        loadFenTo(fen, engine) {
+          let rows = fen.split(" ")[0].split("/");
+          engine.board = Array(10)
+            .fill(null)
+            .map(() => Array(9).fill(null));
+          rows.forEach((r, y) => {
+            let x = 0;
+            for (let c of r) {
+              if (!isNaN(c)) x += parseInt(c);
+              else {
+                let color = c === c.toUpperCase() ? "r" : "b";
+                let t = c.toUpperCase();
+                if (t === "H") t = "N";
+                if (t === "B") t = "E";
+                engine.board[y][x] = color + t;
+                x++;
+              }
             }
-        }
-    }
-}
-function addMarker(p, x, y, c) {
-    const d = document.createElement('div'); d.className = c;
-    d.style.left = (x * 11.11 + 5.55) + '%'; d.style.top = (y * 10 + 5) + '%';
-    p.appendChild(d);
-}
-function onCellClick(x, y) {
-    const p = engine.getPiece(x, y);
-    const myTurn = p && p[0] === engine.turn;
-    if (myTurn) {
-        selected = {x, y}; validMoves = engine.getValidMoves(x, y);
-        render(); return;
-    }
-    if (selected) {
-        if (validMoves.some(m => m.x === x && m.y === y)) {
-            const res = engine.move(selected.x, selected.y, x, y);
-            if(res.success) {
-                selected = null; validMoves = [];
-                render(); updateUI();
-                if(res.check) { playSound('check'); splash(); }
-                else if(res.capture) playSound('capture');
-                else playSound('move');
+          });
+          engine.turn = fen.split(" ")[1] || "r";
+        },
+
+        // --- ADVANCED NOTATION LOGIC ---
+        genNotation(tempEng, move, isReflect) {
+          const { fx, fy, tx, ty, p } = move;
+          const red = p[0] === "r";
+          const type = p[1];
+          let name = CN_PIECES[type];
+
+          // 1. Files
+          let srcF, dstF;
+          if (!isReflect) {
+            srcF = red ? 9 - fx : fx + 1;
+            dstF = red ? 9 - tx : tx + 1;
+          } else {
+            srcF = red ? fx + 1 : 9 - fx;
+            dstF = red ? tx + 1 : 9 - tx;
+          }
+
+          // 2. Ambiguity (Multi-piece on same file)
+          let sameCol = [];
+          for (let y = 0; y < 10; y++)
+            if (tempEng.board[y][fx] === p) sameCol.push(y);
+
+          let prefix = "";
+          if (sameCol.length > 1) {
+            // Sort by visual Front -> Back
+            // Red (Bottom): Front is smaller Y. Black (Top): Front is larger Y.
+            if (red) sameCol.sort((a, b) => a - b);
+            else sameCol.sort((a, b) => b - a);
+
+            let idx = sameCol.indexOf(fy);
+
+            if (sameCol.length === 2) {
+              prefix = idx === 0 ? "前" : "后";
+            } else if (sameCol.length === 3) {
+              prefix = idx === 0 ? "前" : idx === 1 ? "中" : "后";
+            } else {
+              // 4 or 5 pieces: Front, 2, 3, 4, Back
+              const P_MAP = ["前", "二", "三", "四", "五"];
+              if (idx === sameCol.length - 1) prefix = "后";
+              else prefix = P_MAP[idx];
             }
-        } else { selected = null; validMoves = []; render(); }
-    }
-}
-function updateUI() {
-    document.getElementById('status').innerText = (engine.turn==='r' ? "Red" : "Black") + "'s Turn";
-    document.getElementById('status').style.color = (engine.turn==='r' ? "#ff5252" : "#fff");
-    const list = document.getElementById('moveHistory');
-    list.innerHTML = '';
-    for(let i=0; i<engine.history.length; i+=2) {
-        const rm = engine.history[i];
-        const bm = engine.history[i+1];
-        const row = document.createElement('div');
-        row.className = 'move-row';
-        row.innerHTML = `
-            <span style="color:#aaa; width:25px;">${(i/2)+1}.</span>
-            <span style="color:#ff5252; flex:1;">${rm ? rm.notation : ''}</span>
-            <span style="color:#eee; flex:1; text-align:right;">${bm ? bm.notation : ''}</span>
-        `;
-        list.appendChild(row);
-    }
-    list.scrollTop = list.scrollHeight;
-}
-function splash() {
-    const el = document.getElementById('splash');
-    el.classList.remove('active'); void el.offsetWidth; el.classList.add('active');
-    setTimeout(() => el.classList.remove('active'), 1200);
-}
+            name = prefix + name;
+          }
 
-const game = {
-    reset: () => { engine.reset(); selected=null; validMoves=[]; render(); updateUI(); playSound('move'); },
-    undo: () => { if(engine.undo()) { selected=null; validMoves=[]; render(); updateUI(); playSound('move'); } },
-    
-    // EXPORT: Custom .xqpro (JSON)
-    exportXQPro: () => {
-        let coords = ""; engine.history.forEach(m => coords+=`${m.fx}${m.fy}${m.tx}${m.ty}`);
-        const data = { type: 'XiangqiMaster_Save', fen: engine.initialFen, moves: coords };
-        const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'game.xqpro';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    },
+          // 3. Direction
+          const dy = ty - fy;
+          let dir = fy === ty ? "=" : (red ? dy < 0 : dy > 0) ? "+" : "-";
 
-    // EXPORT: Text Box (Chinese Format)
-    exportText: () => {
-        let txt = "开始局面: " + engine.initialFen + "\n着法: \n";
-        for(let i=0; i<engine.history.length; i+=2) {
-            const rm = engine.history[i];
-            const bm = engine.history[i+1];
-            txt += `${(i/2)+1}. ${rm.cnNotation}`;
-            if(bm) txt += ` ${bm.cnNotation}`;
-            txt += "\n";
-        }
-        document.getElementById('ioInput').value = txt;
-    },
+          // 4. Destination
+          let dest = "";
+          if (["R", "C", "P", "K"].includes(type) && dir !== "=") {
+            let dist = Math.abs(dy);
+            dest = red ? CN_NUMS[dist] : CN_DIGITS[dist];
+          } else {
+            dest = red ? CN_NUMS[dstF] : CN_DIGITS[dstF];
+          }
 
-    loadFile: (e) => {
-        const f = e.target.files[0]; if(!f) return;
-        const r = new FileReader();
-        r.onload = (evt) => game.parse(evt.target.result);
-        r.readAsText(f);
-    },
+          // 5. Assembly
+          // If prefix exists (Front/Back), we drop source file char
+          if (sameCol.length > 1) return name + CN_DIR[dir] + dest;
 
-    loadFromInput: () => { game.parse(document.getElementById('ioInput').value); },
+          let fChar = red ? CN_NUMS[srcF] : CN_DIGITS[srcF];
+          return name + fChar + CN_DIR[dir] + dest;
+        },
 
-    parse: (txt) => {
-        let fen = engine.initialFen, moveStr = "";
-        try {
-            // 1. .xqpro JSON
-            const json = JSON.parse(txt);
-            if(json.type === 'XiangqiMaster_Save') { fen = json.fen; moveStr = json.moves; }
-        } catch(e) {
-            // 2. DPXQ Parsing
-            const f = txt.match(/_fen](.*?)\[/); if(f) fen = f[1];
-            const m = txt.match(/_movelist](.*?)\[/); if(m) moveStr = m[1];
-            // 3. Raw String
-            if(!m && /^\d+$/.test(txt.trim())) moveStr = txt.trim();
-        }
-
-        // Replay
-        engine.reset(); engine.loadFEN(fen); engine.initialFen = fen;
-        for(let i=0; i<moveStr.length; i+=4) {
-            const fx=parseInt(moveStr[i]), fy=parseInt(moveStr[i+1]), tx=parseInt(moveStr[i+2]), ty=parseInt(moveStr[i+3]);
-            const p = engine.getPiece(fx, fy);
-            if(p) {
-                const wxf = engine.getWXFNotation(fx, fy, tx, ty, p);
-                const cn = engine.getChineseNotation(fx, fy, tx, ty, p);
-                const captured = engine.getPiece(tx, ty);
-                engine.board[ty][tx] = p; engine.board[fy][fx] = null;
-                engine.history.push({fx,fy,tx,ty,captured,p,notation:wxf,cnNotation:cn});
-                engine.turn = (engine.turn==='r')?'b':'r';
+        export() {
+          let fen = "";
+          for (let y = 0; y < 10; y++) {
+            let e = 0;
+            for (let x = 0; x < 9; x++) {
+              let p = this.eng.board[y][x];
+              if (!p) e++;
+              else {
+                if (e) fen += e;
+                e = 0;
+                let c = p[1];
+                if (c === "N") c = "H";
+                if (c === "E") c = "B";
+                fen += p[0] === "r" ? c.toUpperCase() : c.toLowerCase();
+              }
             }
-        }
-        selected=null; validMoves=[]; render(); updateUI(); playSound('move');
-    }
-};
+            if (e) fen += e;
+            if (y < 9) fen += "/";
+          }
+          fen += ` ${this.eng.turn} - - 0 1`;
 
-render(); updateUI();
-</script>
-</body>
+          let mvStr = this.eng.history.map((h) => h.mv).join("");
+
+          // Re-generate notation list for export (Always standard view logic for export text)
+          let tmp = new Engine();
+          if (this.startFen) this.loadFenTo(this.startFen, tmp);
+          let movesTxt = "";
+
+          this.eng.history.forEach((h, i) => {
+            let not = this.genNotation(tmp, h, false); // False = No reflect for text export
+            if (i % 2 === 0) movesTxt += `${i / 2 + 1}. ${not} `;
+            else movesTxt += `${not}\n`;
+
+            tmp.board[h.ty][h.tx] = tmp.board[h.fy][h.fx];
+            tmp.board[h.fy][h.fx] = null;
+          });
+
+          let output = `[DhtmlXQ_fen]${this.startFen}[/DhtmlXQ_fen]\n[DhtmlXQ_movelist]${mvStr}[/DhtmlXQ_movelist]\n开始局面: ${this.startFen}\n着法:\n${movesTxt}\n使用皮卡鱼象棋在线分析: https://www.xiangqiai.com`;
+
+          document.getElementById("fenBox").value = output;
+          navigator.clipboard.writeText(output);
+          alert("Copied Full Format!");
+        },
+      };
+
+      ui.init();
+    </script>
+  </body>
 </html>
