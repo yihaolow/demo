@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Xiangqi Pro: Shine Edition</title>
+<title>Xiangqi Master: Final</title>
 <style>
     :root {
         --bg-grad: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
@@ -12,19 +12,9 @@
         --glass: rgba(255, 255, 255, 0.08);
         --glass-border: rgba(255, 255, 255, 0.1);
         --highlight: rgba(255, 215, 0, 0.4);
+        --selected: rgba(0, 255, 0, 0.5);
         --red: #d63031;
         --black: #2d3436;
-    }
-
-    /* Modern CSS for the Shine Effect (Adapted from your request) */
-    @property --shine-angle {
-        syntax: '<angle>';
-        initial-value: 0deg;
-        inherits: false;
-    }
-
-    @keyframes rotateShine {
-        to { --shine-angle: 360deg; }
     }
 
     body {
@@ -41,8 +31,8 @@
 
     .container {
         display: flex;
-        gap: 20px;
-        padding: 20px;
+        gap: 10px;
+        padding: 10px;
         max-width: 1300px;
         width: 100%;
         height: 100%;
@@ -51,20 +41,19 @@
         justify-content: center;
     }
 
-    /* BOARD WRAPPER - The anchor for scaling */
+    /* BOARD FRAME */
     .board-frame {
         flex: 0 0 auto;
-        position: relative;
-        /* Default size, JS will scale this down for mobile */
-        width: 500px; 
-        height: 550px; 
+        padding: 10px;
         background: rgba(0,0,0,0.4);
-        border-radius: 16px;
+        border-radius: 8px;
         border: 1px solid var(--glass-border);
         display: flex;
         justify-content: center;
         align-items: center;
-        transition: transform 0.2s ease;
+        /* Crucial for scaling stability */
+        transform-origin: center top;
+        transition: transform 0.1s linear;
     }
 
     .board {
@@ -76,8 +65,7 @@
         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E");
         box-shadow: inset 0 0 20px rgba(93,64,55,0.6);
         user-select: none;
-        /* Fix for iPhone flickering */
-        -webkit-transform: translate3d(0,0,0);
+        -webkit-user-select: none;
     }
 
     /* SVG */
@@ -95,54 +83,26 @@
     #markerLayer { z-index: 5; }
     #pieceLayer { z-index: 10; }
 
-    /* PIECES */
+    /* PIECES - Slightly smaller (40px) to fit mobile screens better */
     .piece {
-        width: 44px; height: 44px;
+        width: 40px; height: 40px;
         border-radius: 50%;
         position: absolute;
         display: flex; justify-content: center; align-items: center;
-        font-family: "KaiTi", serif; font-size: 28px; font-weight: bold;
+        font-family: "KaiTi", serif; font-size: 26px; font-weight: bold;
         background: #fdf5e6;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.9);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.9);
         transform: translate(-50%, -50%);
-        transition: top 0.2s, left 0.2s;
-        /* Improve text rendering on iOS */
-        -webkit-font-smoothing: antialiased;
+        transition: top 0.15s, left 0.15s;
     }
     .piece.red { color: var(--red); border: 2px solid #c0392b; }
     .piece.black { color: var(--black); border: 2px solid #333; }
 
     /* MARKERS */
     .marker { position: absolute; transform: translate(-50%, -50%); }
-    .last { width: 48px; height: 48px; background: var(--highlight); border-radius: 8px; }
-    .dot { width: 14px; height: 14px; background: rgba(0, 180, 0, 0.7); border-radius: 50%; }
-
-    /* --- THE SHINE EFFECT (Adapted from your request) --- */
-    .select { 
-        width: 52px; height: 52px; 
-        border-radius: 50%; 
-        position: absolute;
-        z-index: 20;
-        
-        /* The Shine Logic */
-        box-shadow: 0 0 1px .8px hsl(0 0% 100% / .8) inset;
-        background: rgba(255, 215, 0, 0.1); /* Subtle gold fill */
-        
-        /* The Mask Rotation */
-        animation: rotateShine 2s linear infinite;
-    }
-
-    .select::after {
-        content: '';
-        position: absolute;
-        inset: -1px;
-        border-radius: inherit;
-        background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,215,0,0.4));
-        /* The Mask Logic from your code snippet */
-        mask: linear-gradient(var(--shine-angle), #ffffff80, #ffffff30 30% 60%, #fff);
-        -webkit-mask: linear-gradient(var(--shine-angle), #ffffff80, #ffffff30 30% 60%, #fff);
-        pointer-events: none;
-    }
+    .last { width: 44px; height: 44px; background: var(--highlight); border-radius: 8px; }
+    .select { width: 46px; height: 46px; background: var(--selected); border-radius: 50%; box-shadow: 0 0 10px var(--selected); }
+    .dot { width: 12px; height: 12px; background: rgba(0, 180, 0, 0.7); border-radius: 50%; }
 
     /* SIDEBAR */
     .sidebar {
@@ -150,7 +110,7 @@
         min-width: 300px;
         display: flex;
         flex-direction: column;
-        gap: 15px;
+        gap: 10px;
         height: 100%;
         overflow: hidden;
     }
@@ -158,12 +118,12 @@
         background: var(--glass);
         border: 1px solid var(--glass-border);
         border-radius: 8px;
-        padding: 15px;
+        padding: 10px;
         display: flex; flex-direction: column;
     }
     .history-panel { flex: 2; overflow: hidden; }
     
-    .status { text-align: center; font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; color: #ff6b6b; }
+    .status { text-align: center; font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; color: #ff6b6b; }
     
     .history {
         flex: 1;
@@ -172,32 +132,32 @@
         overflow-y: auto;
         padding: 5px;
         font-family: monospace;
-        font-size: 14px;
+        font-size: 13px;
     }
-    .row { display: flex; padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .row { display: flex; padding: 3px; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .row span { flex: 1; }
     .row span:first-child { flex: 0 0 30px; color: #888; }
     .row .red-mv { color: #ff6b6b; cursor: pointer; }
     .row .black-mv { color: #ccc; cursor: pointer; }
 
     /* CONTROLS */
-    .grid-btn { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .grid-btn { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
     button {
-        padding: 12px;
+        padding: 10px;
         background: rgba(255,255,255,0.1);
         border: 1px solid rgba(255,255,255,0.2);
         color: white;
-        border-radius: 6px;
+        border-radius: 4px;
         cursor: pointer;
         font-weight: bold;
-        font-size: 14px;
+        font-size: 13px;
     }
-    button:active { transform: scale(0.98); background: rgba(255,255,255,0.2); }
+    button:active { background: rgba(255,255,255,0.2); }
     .btn-red { background: #c0392b; border: none; }
     .btn-green { background: #27ae60; border: none; }
     
     textarea { 
-        width: 100%; height: 100px; 
+        width: 100%; height: 80px; 
         background: rgba(0,0,0,0.3); border: 1px solid #555; 
         color: #eee; resize: none; margin-bottom: 5px; 
         font-family: monospace; font-size: 11px;
@@ -208,7 +168,7 @@
     #splash {
         position: absolute; top: 50%; left: 50%;
         transform: translate(-50%, -50%) scale(0);
-        font-size: 5rem; font-family: "KaiTi"; font-weight: 900;
+        font-size: 4rem; font-family: "KaiTi"; font-weight: 900;
         color: #ff4757; text-shadow: 0 5px 20px black;
         pointer-events: none; z-index: 200; opacity: 0;
         -webkit-text-stroke: 2px white; white-space: nowrap;
@@ -221,11 +181,11 @@
     }
 
     @media (max-width: 900px) {
-        .container { flex-direction: column; height: 100vh; overflow-y: auto; padding: 10px; }
-        /* JS handles board scaling, but we ensure container fits */
-        .board-frame { margin: 0 auto; transform-origin: top center; } 
-        .sidebar { width: 100%; height: auto; flex: none; }
-        .history-panel { height: 200px; }
+        .container { flex-direction: column; padding: 5px; height: 100vh; }
+        .board-frame { width: 100%; height: auto; aspect-ratio: 450/500; padding: 5px; box-sizing: border-box;}
+        /* Scale board by adjusting CSS transform in JS, but ensure frame takes space */
+        .sidebar { width: 100%; max-height: 45vh; }
+        .history-panel { height: 150px; flex: none; }
     }
 </style>
 </head>
@@ -237,18 +197,13 @@
             <svg class="grid" viewBox="0 0 450 500">
                 <rect x="25" y="25" width="400" height="450" class="border"/>
                 <g class="line">
-                    <line x1="25" y1="75" x2="425" y2="75"/>
-                    <line x1="25" y1="125" x2="425" y2="125"/>
-                    <line x1="25" y1="175" x2="425" y2="175"/>
-                    <line x1="25" y1="225" x2="425" y2="225"/>
-                    <line x1="25" y1="275" x2="425" y2="275"/>
-                    <line x1="25" y1="325" x2="425" y2="325"/>
-                    <line x1="25" y1="375" x2="425" y2="375"/>
-                    <line x1="25" y1="425" x2="425" y2="425"/>
+                    <line x1="25" y1="75" x2="425" y2="75"/><line x1="25" y1="125" x2="425" y2="125"/>
+                    <line x1="25" y1="175" x2="425" y2="175"/><line x1="25" y1="225" x2="425" y2="225"/>
+                    <line x1="25" y1="275" x2="425" y2="275"/><line x1="25" y1="325" x2="425" y2="325"/>
+                    <line x1="25" y1="375" x2="425" y2="375"/><line x1="25" y1="425" x2="425" y2="425"/>
                 </g>
                 <g class="line">
-                    <line x1="225" y1="25" x2="225" y2="225"/> 
-                    <line x1="225" y1="275" x2="225" y2="475"/> 
+                    <line x1="225" y1="25" x2="225" y2="225"/> <line x1="225" y1="275" x2="225" y2="475"/> 
                     <line x1="75" y1="25" x2="75" y2="225"/> <line x1="75" y1="275" x2="75" y2="475"/>
                     <line x1="125" y1="25" x2="125" y2="225"/> <line x1="125" y1="275" x2="125" y2="475"/>
                     <line x1="175" y1="25" x2="175" y2="225"/> <line x1="175" y1="275" x2="175" y2="475"/>
@@ -263,7 +218,6 @@
                 <text x="110" y="250" class="river-text">楚 河</text>
                 <text x="340" y="250" class="river-text">漢 界</text>
             </svg>
-
             <div id="markerLayer" class="layer"></div>
             <div id="pieceLayer" class="layer"></div>
             <div class="click-mask" onclick="ui.click(event)"></div>
@@ -295,10 +249,13 @@
 <script>
 const sfx={play(f,t){const c=new(window.AudioContext||window.webkitAudioContext);const o=c.createOscillator();const g=c.createGain();o.type=t;o.frequency.setValueAtTime(f,c.currentTime);g.gain.setValueAtTime(0.3,c.currentTime);g.gain.exponentialRampToValueAtTime(0.01,c.currentTime+0.1);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+0.1);}};
 
-/* NOTATION CONSTANTS */
 const CN_NUMS = ['','一','二','三','四','五','六','七','八','九']; 
 const CN_DIGITS = ['','１','２','３','４','５','６','７','８','９'];
-const CN_PIECES = {'K':'帅','A':'仕','E':'相','N':'马','R':'车','C':'炮','P':'兵', 'k':'将','a':'士','e':'象','n':'马','r':'车','c':'炮','p':'卒'};
+// Updated Character Set
+const CN_PIECES = {
+    'K':'帥','A':'仕','E':'相','N':'傌','R':'俥','C':'炮','P':'兵', 
+    'k':'将','a':'士','e':'象','n':'馬','r':'車','c':'砲','p':'卒'
+};
 const CN_DIR = {'+':'进', '-':'退', '=':'平'};
 
 class Engine {
@@ -306,6 +263,30 @@ class Engine {
     reset() {
         this.board = Array(10).fill(null).map(()=>Array(9).fill(null));
         const init = [
+            ['br','bn','be','ba','bk','ba','be','bn','br'],
+            [null,null,null,null,null,null,null,null,null],
+            [null,'bc',null,null,null,null,null,'bc',null],
+            ['bp',null,'bp',null,'bp',null,'bp',null,'bp'],
+            [null,null,null,null,null,null,null,null,null],
+            [null,null,null,null,null,null,null,null,null],
+            ['rP',null,'rP',null,'rP',null,'rP',null,'rP'],
+            [null,'rC',null,null,null,null,null,'rC',null],
+            [null,null,null,null,null,null,null,null,null],
+            ['rR','rN','rE','rA','rK','rA','rE','rN','rR']
+        ];
+        // Standard FEN map: R=rR (Red Chariot), r=br (Black Chariot)
+        // My array uses internal codes (rR, br)
+        // Map init visual to internal:
+        // Lowercase in 'init' = black, Uppercase = red (except the array above is manually set)
+        // Wait, standard internal logic:
+        // 'rR' = Red Rook. 'br' = Black Rook (in previous code it was 'bR').
+        // Let's stick to strict codes:
+        // Red: rK, rA, rE, rN, rR, rC, rP
+        // Black: bK, bA, bE, bN, bR, bC, bP
+        
+        // Correct setup:
+        this.board = Array(10).fill(null).map(()=>Array(9).fill(null));
+        const start = [
             ['bR','bN','bE','bA','bK','bA','bE','bN','bR'],
             [null,null,null,null,null,null,null,null,null],
             [null,'bC',null,null,null,null,null,'bC',null],
@@ -317,7 +298,8 @@ class Engine {
             [null,null,null,null,null,null,null,null,null],
             ['rR','rN','rE','rA','rK','rA','rE','rN','rR']
         ];
-        init.forEach((r,y)=>r.forEach((p,x)=>this.board[y][x]=p));
+        for(let y=0;y<10;y++) for(let x=0;x<9;x++) this.board[y][x] = start[y][x];
+        
         this.turn='r';
         this.history=[];
         this.idx=0;
@@ -390,7 +372,6 @@ class Engine {
     }
 }
 
-/* --- UI --- */
 const ui = {
     flip: false, reflect: false, sel: null,
     
@@ -402,13 +383,16 @@ const ui = {
     },
 
     resizeBoard() {
-        // iPhone Fix: Scale the board wrapper to fit screen
+        // Auto scale board to fit width
         const frame = document.getElementById('boardFrame');
         const board = document.getElementById('board');
-        const containerWidth = frame.clientWidth - 40; // minus padding
-        const scale = Math.min(1, containerWidth / 450);
+        // Available width inside frame (minus padding)
+        const w = frame.clientWidth - 20; 
+        const h = frame.clientHeight - 20;
+        
+        // Target is 450x500
+        const scale = Math.min(1, w/450, h/500); 
         board.style.transform = `scale(${scale})`;
-        board.style.transformOrigin = 'center center';
     },
 
     doFlip() { this.flip = !this.flip; this.render(); },
@@ -423,8 +407,7 @@ const ui = {
     toLog(cx, cy) {
         const board = document.getElementById('board');
         const rect = board.getBoundingClientRect();
-        // Since we used transform scale, we must account for it
-        // The rect returns the scaled size.
+        // Calculate true scale from rect size vs 450x500
         const sx = 450 / rect.width;
         const sy = 500 / rect.height;
         
@@ -475,7 +458,7 @@ const ui = {
             board = tmp.board;
         }
 
-        const map = {'rK':'帥','rA':'仕','rE':'相','rN':'傌','rR':'俥','rC':'炮','rP':'兵','bK':'將','bA':'士','bE':'象','bN':'馬','bR':'車','bC':'炮','bP':'卒'};
+        const map = CN_PIECES;
 
         for(let y=0; y<10; y++) for(let x=0; x<9; x++) {
             let p = board[y][x];
@@ -491,7 +474,6 @@ const ui = {
 
             if(this.sel && this.sel.x===x && this.sel.y===y) {
                 let m = document.createElement('div');
-                // APPLY SHINE EFFECT CLASS
                 m.className = 'marker select';
                 m.style.left = pos.left+'px'; m.style.top = pos.top+'px';
                 mL.appendChild(m);
@@ -515,7 +497,10 @@ const ui = {
             if(p) {
                 let d = document.createElement('div');
                 d.className = `piece ${p[0]==='r'?'red':'black'}`;
-                d.innerText = map[p];
+                d.innerText = map[p[1]] || map[p]; // Safe map
+                if(p[0]==='b' && p[1]==='K') d.innerText = map['k']; // Ensure King distinction
+                if(p[0]==='r' && p[1]==='K') d.innerText = map['K'];
+                
                 d.style.left = pos.left+'px'; d.style.top = pos.top+'px';
                 pL.appendChild(d);
             }
@@ -525,7 +510,6 @@ const ui = {
     updateInfo() {
         const list = document.getElementById('history');
         list.innerHTML = '';
-        
         let tmp = new Engine();
         if(game.startFen) game.loadFenTo(game.startFen, tmp);
 
@@ -563,7 +547,6 @@ const ui = {
     }
 };
 
-/* --- CTRL --- */
 const game = {
     eng: new Engine(),
     startFen: "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1",
@@ -604,6 +587,7 @@ const game = {
         let txt = document.getElementById('fenBox').value.trim();
         if(!txt) return;
         let fen = txt;
+        // Parse block
         if(txt.includes('[DhtmlXQ]')) {
             let f = txt.match(/_fen](.*?)\[/);
             if(f) fen = f[1];
@@ -641,6 +625,7 @@ const game = {
         const red = p[0] === 'r';
         const type = p[1];
         let name = CN_PIECES[type];
+        if(p[0]==='b' && type==='K') name='将'; // Fix specifically for Black King
 
         // 1. Files
         let srcF, dstF;
@@ -653,8 +638,11 @@ const game = {
         }
 
         // 2. Ambiguity (Multi-piece on same file)
+        // SKIP Front/Back for Advisors(A) and Elephants(E)
         let sameCol = [];
-        for(let y=0; y<10; y++) if(tempEng.board[y][fx] === p) sameCol.push(y);
+        if(!['A','E'].includes(type)) {
+            for(let y=0; y<10; y++) if(tempEng.board[y][fx] === p) sameCol.push(y);
+        }
         
         let prefix = "";
         if(sameCol.length > 1) {
@@ -669,7 +657,7 @@ const game = {
             } else if(sameCol.length === 3) {
                 prefix = (idx === 0) ? "前" : (idx === 1 ? "中" : "后");
             } else {
-                // 4 or 5 pieces: Front, 2, 3, 4, Back (Uses numbers 2,3,4)
+                // 4 or 5 pieces: Front, 2, 3, 4, Back
                 const P_MAP = ["前", "二", "三", "四", "五"];
                 if(idx === sameCol.length-1) prefix = "后";
                 else prefix = P_MAP[idx];
@@ -721,18 +709,18 @@ const game = {
         let movesTxt = "";
         
         this.eng.history.forEach((h, i) => {
-            let not = this.genNotation(tmp, h, false);
+            let not = this.genNotation(tmp, h, false); // Standard export
             if(i%2===0) movesTxt += `${(i/2)+1}. ${not} `;
             else movesTxt += `${not}\n`;
             tmp.board[h.ty][h.tx] = tmp.board[h.fy][h.fx];
             tmp.board[h.fy][h.fx] = null;
         });
 
-        let output = `[DhtmlXQ]\n[DhtmlXQ_fen]${this.startFen}[/DhtmlXQ_fen]\n[DhtmlXQ_movelist]${mvStr}[/DhtmlXQ_movelist]\n[/DhtmlXQ]\n开始局面: ${this.startFen}\n着法:\n${movesTxt}\n使用皮卡鱼象棋在线分析: https://www.xiangqiai.com`;
+        let output = `[DhtmlXQ_fen]${this.startFen}[/DhtmlXQ_fen]\n[DhtmlXQ_binit]${mvStr}[/DhtmlXQ_binit]\n开始局面: ${this.startFen}\n着法:\n${movesTxt}\n使用皮卡鱼象棋在线分析: https://www.xiangqiai.com`;
         
         document.getElementById('fenBox').value = output;
         navigator.clipboard.writeText(output);
-        alert("Copied Full Format!");
+        alert("Full Format Copied!");
     }
 };
 
