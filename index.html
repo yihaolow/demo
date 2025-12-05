@@ -415,24 +415,24 @@
     </div>
 
     <script>
-      // --- SFX (NO CHANGE) ---
+      // --- SFX (UPDATED WITH CAPTURE EFFECT) ---
       const sfx = {
-        play(f, t) {
+        play(f, t, g = 0.3, d = 0.1) {
           const c = new (window.AudioContext || window.webkitAudioContext)();
           const o = c.createOscillator();
-          const g = c.createGain();
+          const gainNode = c.createGain();
           o.type = t;
           o.frequency.setValueAtTime(f, c.currentTime);
-          g.gain.setValueAtTime(0.3, c.currentTime);
-          g.gain.exponentialRampToValueAtTime(0.01, c.currentTime + 0.1);
-          o.connect(g);
-          g.connect(c.destination);
+          gainNode.gain.setValueAtTime(g, c.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, c.currentTime + d);
+          o.connect(gainNode);
+          gainNode.connect(c.destination);
           o.start();
-          o.stop(c.currentTime + 0.1);
+          o.stop(c.currentTime + d);
         },
       };
 
-      // --- CONSTANTS (UPDATED MAPPING) ---
+      // --- CONSTANTS ---
       const CN_NUMS = [
         "",
         "一",
@@ -457,7 +457,7 @@
         "８",
         "９",
       ];
-      // Updated Character Set: R/B notation needs to match R/B pieces
+      // R/B notation needs to match R/B pieces
       const CN_PIECES = {
         rK: "帥",
         rA: "仕",
@@ -473,7 +473,6 @@
         bR: "車",
         bC: "砲",
         bP: "卒",
-        // Fallback for piece layer rendering
         K: "帥",
         A: "仕",
         E: "相",
@@ -491,7 +490,7 @@
       };
       const CN_DIR = { "+": "进", "-": "退", "=": "平" };
 
-      // --- ENGINE (NO LOGIC CHANGE) ---
+      // --- ENGINE (ADDED getLegalMoves) ---
       class Engine {
         constructor() {
           this.reset();
@@ -599,7 +598,7 @@
           for (let y = 0; y < 10; y++)
             for (let x = 0; x < 9; x++)
               if (this.board[y][x] === turn + "K") k = { x, y };
-          if (!k) return true;
+          if (!k) return true; // Should not happen in a valid game
           const opp = turn === "r" ? "b" : "r";
           let ok = null;
           for (let y = 0; y < 10; y++)
@@ -616,17 +615,55 @@
           return false;
         }
 
+        // NEW: Find all legal moves for the current player
+        getLegalMoves() {
+          let moves = [];
+          const turn = this.turn;
+          for (let fy = 0; fy < 10; fy++) {
+            for (let fx = 0; fx < 9; fx++) {
+              let p = this.board[fy][fx];
+              if (p && p[0] === turn) {
+                for (let ty = 0; ty < 10; ty++) {
+                  for (let tx = 0; tx < 9; tx++) {
+                    if (this.validate(fx, fy, tx, ty, p)) {
+                      // Test if the move leaves the king safe
+                      let cap = this.board[ty][tx];
+                      this.board[ty][tx] = p;
+                      this.board[fy][fx] = null;
+
+                      if (!this.inCheck(turn)) {
+                        moves.push({ fx, fy, tx, ty, p, cap });
+                      }
+
+                      // Undo the move
+                      this.board[fy][fx] = p;
+                      this.board[ty][tx] = cap;
+                    }
+                  }
+                }
+              }
+            }
+          }
+          return moves;
+        }
+
         move(fx, fy, tx, ty) {
           if (this.idx !== this.history.length) return false;
           let p = this.board[fy][fx];
           if (!p || p[0] !== this.turn) return false;
-          if (!this.validate(fx, fy, tx, ty, p)) return false;
 
           let cap = this.board[ty][tx];
+
+          // Pre-move validation (fast)
+          if (!this.validate(fx, fy, tx, ty, p)) return false;
+
+          // Make move
           this.board[ty][tx] = p;
           this.board[fy][fx] = null;
 
+          // Check for self-check (slow)
           if (this.inCheck(this.turn)) {
+            // Undo move
             this.board[fy][fx] = p;
             this.board[ty][tx] = cap;
             return false;
@@ -636,11 +673,11 @@
           this.history.push({ fx, fy, tx, ty, p, cap, mv: mvStr });
           this.idx++;
           this.turn = this.turn === "r" ? "b" : "r";
-          return true;
+          return cap; // Return captured piece for SFX/Effects
         }
       }
 
-      // --- UI (FIXED INPUT LAG & RENDERING) ---
+      // --- UI (UPDATED CLICK HANDLER) ---
       const ui = {
         flip: false,
         reflect: false,
@@ -687,11 +724,9 @@
         toLog(cx, cy) {
           const board = document.getElementById("board");
           const rect = board.getBoundingClientRect();
-          // Calculate scale accurately from the displayed size
           const scaleX = rect.width / 450;
           const scaleY = rect.height / 500;
 
-          // Calculate coordinates relative to the 450x500 virtual board
           let x = Math.round(((cx - rect.left) / scaleX - 25) / 50);
           let y = Math.round(((cy - rect.top) / scaleY - 25) / 50);
 
@@ -705,23 +740,29 @@
         },
 
         click(e) {
-          // Prevent action if reviewing history
-          if (game.eng.idx !== game.eng.history.length) return;
+          // Prevent action if game is over or reviewing history
+          if (game.eng.idx !== game.eng.history.length || game.isGameOver)
+            return;
 
-          // Fix for lag: Use requestAnimationFrame for smooth UI updates after processing
           const c = this.toLog(e.clientX, e.clientY);
           if (!c) return;
           const p = game.eng.getPiece(c.x, c.y);
 
           const handleMove = () => {
-            if (game.eng.move(this.sel.x, this.sel.y, c.x, c.y)) {
-              sfx.play(300, "square");
+            const cap = game.eng.move(this.sel.x, this.sel.y, c.x, c.y);
+            if (cap !== false) {
+              // Determine SFX: Capture or standard move
+              if (cap)
+                sfx.play(200, "triangle", 0.2, 0.1); // Subtle capture sound
+              else sfx.play(300, "square"); // Standard move sound
+
               this.sel = null;
+
               // Defer UI updates to next frame for responsiveness
               requestAnimationFrame(() => {
                 this.render();
                 this.updateInfo();
-                if (game.eng.inCheck(game.eng.turn)) ui.splash("將 軍");
+                game.checkGameOver();
               });
             } else if (p && p[0] === game.eng.turn) {
               this.sel = c;
@@ -749,6 +790,7 @@
           mL.innerHTML = "";
 
           let board = game.eng.board;
+          // Logic for history viewing
           if (game.eng.idx < game.eng.history.length) {
             let tmp = new Engine();
             if (game.startFen) game.loadFenTo(game.startFen, tmp);
@@ -788,26 +830,19 @@
                 m.style.left = pos.left + "px";
                 m.style.top = pos.top + "px";
                 mL.appendChild(m);
+                // Only show legal moves if not reviewing history
                 if (game.eng.idx === game.eng.history.length) {
-                  for (let ty = 0; ty < 10; ty++)
-                    for (let tx = 0; tx < 9; tx++) {
-                      let cap = game.eng.board[ty][tx];
-                      game.eng.board[ty][tx] = p;
-                      game.eng.board[y][x] = null;
-                      let valid =
-                        game.eng.validate(x, y, tx, ty, p) &&
-                        !game.eng.inCheck(p[0]);
-                      game.eng.board[y][x] = p;
-                      game.eng.board[ty][tx] = cap;
-                      if (valid) {
-                        let dPos = this.toPx(tx, ty);
-                        let d = document.createElement("div");
-                        d.className = "marker dot";
-                        d.style.left = dPos.left + "px";
-                        d.style.top = dPos.top + "px";
-                        mL.appendChild(d);
-                      }
-                    }
+                  const tempMoves = game.eng.getLegalMoves();
+                  tempMoves
+                    .filter((m) => m.fx === x && m.fy === y)
+                    .forEach((m) => {
+                      let dPos = this.toPx(m.tx, m.ty);
+                      let d = document.createElement("div");
+                      d.className = "marker dot";
+                      d.style.left = dPos.left + "px";
+                      d.style.top = dPos.top + "px";
+                      mL.appendChild(d);
+                    });
                 }
               }
 
@@ -815,7 +850,6 @@
               if (p) {
                 let d = document.createElement("div");
                 d.className = `piece ${p[0] === "r" ? "red" : "black"}`;
-                // Use the precise two-character code (e.g., 'rR', 'bC') for the display character
                 d.innerText = map[p];
 
                 d.style.left = pos.left + "px";
@@ -827,6 +861,22 @@
 
         updateInfo() {
           const list = document.getElementById("history");
+          const statusEl = document.getElementById("status");
+
+          if (game.isGameOver) {
+            statusEl.style.color = "yellow";
+            statusEl.innerText = game.gameOverStatus;
+          } else {
+            statusEl.style.color = game.eng.turn === "r" ? "#ff6b6b" : "#aaa";
+            statusEl.innerText =
+              (game.eng.turn === "r" ? "Red" : "Black") + " to Move";
+
+            // Check for check *before* the next move is made
+            if (game.eng.inCheck(game.eng.turn)) {
+              statusEl.innerText += " - Check!";
+            }
+          }
+
           list.innerHTML = "";
           let tmp = new Engine();
           if (game.startFen) game.loadFenTo(game.startFen, tmp);
@@ -847,8 +897,6 @@
             }
 
             let div = document.createElement("div");
-            // Check if this is the current position to highlight
-            const isCurrent = i + 1 === game.eng.idx || i + 2 === game.eng.idx;
 
             div.className = "row";
             div.innerHTML = `<span>${i / 2 + 1}.</span>
@@ -867,16 +915,20 @@
           let el = document.getElementById("splash");
           el.innerText = txt;
           el.classList.remove("pop");
+          // Trigger reflow to restart animation
           void el.offsetWidth;
           el.classList.add("pop");
+          sfx.play(440, "sine", 0.5, 0.4); // Dramatic sound for check/mate
         },
       };
 
-      // --- GAME (UPDATED NOTATION FUNCTION) ---
+      // --- GAME (ADDED checkGameOver) ---
       const game = {
         eng: new Engine(),
         startFen:
           "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1",
+        isGameOver: false,
+        gameOverStatus: "",
 
         newGame() {
           if (!confirm("Start New Game?")) return;
@@ -887,6 +939,8 @@
           ui.sel = null;
           ui.flip = false;
           ui.reflect = false;
+          this.isGameOver = false;
+          this.gameOverStatus = "";
           ui.init();
           sfx.play(400, "sawtooth");
         },
@@ -900,7 +954,7 @@
             this.eng.history.pop();
             this.eng.idx--;
             this.eng.turn = this.eng.turn === "r" ? "b" : "r";
-            // Revert board
+
             let tmp = new Engine();
             this.loadFenTo(this.startFen, tmp);
             this.eng.history.forEach((m) => {
@@ -908,6 +962,8 @@
               tmp.board[m.fy][m.fx] = null;
             });
             this.eng.board = tmp.board;
+
+            this.isGameOver = false; // Reset game over status on undo
             ui.sel = null;
             ui.render();
             ui.updateInfo();
@@ -933,6 +989,9 @@
             this.eng.reset();
             this.loadFenTo(fen, this.eng);
             this.startFen = fen;
+            this.isGameOver = false;
+            this.gameOverStatus = "";
+            this.checkGameOver(); // Check status of loaded FEN
             ui.init();
             sfx.play(500, "square");
           }
@@ -960,12 +1019,34 @@
           engine.turn = fen.split(" ")[1] || "r";
         },
 
+        // NEW: Check for checkmate/stalemate/draw
+        checkGameOver() {
+          const moves = this.eng.getLegalMoves();
+          const opponentTurn = this.eng.turn === "r" ? "b" : "r";
+          const opponentColor = opponentTurn === "r" ? "Red" : "Black";
+
+          if (moves.length === 0) {
+            this.isGameOver = true;
+            if (this.eng.inCheck(this.eng.turn)) {
+              this.gameOverStatus = `${opponentColor} Wins by Checkmate (绝杀)`;
+              ui.splash("绝 杀");
+            } else {
+              this.gameOverStatus = `Stalemate (闷宫)`;
+              ui.splash("闷 宫");
+            }
+          } else if (this.eng.inCheck(this.eng.turn)) {
+            // Only flash "General Check" if the game is NOT over
+            ui.splash("將 軍");
+          }
+
+          ui.updateInfo();
+        },
+
         genNotation(tempEng, move, isReflect) {
           const { fx, fy, tx, ty, p } = move;
           const red = p[0] === "r";
           const type = p[1];
 
-          // --- KEY FIX: Use the full piece code 'p' for accurate character mapping ---
           let name = CN_PIECES[p];
 
           // 1. Files
@@ -979,7 +1060,6 @@
           }
 
           // 2. Ambiguity (Multi-piece on same file)
-          // SKIP Front/Back for Advisors(A) and Elephants(E)
           let sameCol = [];
           if (!["A", "E"].includes(type)) {
             for (let y = 0; y < 10; y++)
@@ -988,7 +1068,6 @@
 
           let prefix = "";
           if (sameCol.length > 1) {
-            // Sort by visual Front -> Back (Red: Lower Y is Front. Black: Higher Y is Front)
             if (red) sameCol.sort((a, b) => a - b);
             else sameCol.sort((a, b) => b - a);
 
@@ -999,7 +1078,6 @@
             } else if (sameCol.length === 3) {
               prefix = idx === 0 ? "前" : idx === 1 ? "中" : "后";
             } else {
-              // 4 or 5 pieces: Front, 2, 3, 4, Back
               const P_MAP = ["前", "二", "三", "四", "五"];
               if (idx === sameCol.length - 1) prefix = "后";
               else prefix = P_MAP[idx];
