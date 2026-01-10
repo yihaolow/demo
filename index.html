@@ -1,1135 +1,447 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
-    <title>Xiangqi Master: Mobile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xiangqi Mini Player</title>
     <style>
-      :root {
-        --bg-grad: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
-        --board-bg: #eecfa1;
-        --line-color: #5d4037;
-        --glass: rgba(255, 255, 255, 0.08);
-        --glass-border: rgba(255, 255, 255, 0.1);
-        --highlight: rgba(255, 215, 0, 0.4);
-        --selected: rgba(0, 255, 0, 0.5);
-        --red: #d63031;
-        --black: #2d3436;
-        --tab-active: #2980b9;
-      }
-
-      body {
-        margin: 0;
-        background: var(--bg-grad);
-        color: #ddd;
-        font-family: "Microsoft YaHei", sans-serif;
+      /* --- PLAYER CSS (Scoped to .xq-player) --- */
+      .xq-player {
+        font-family: "Helvetica Neue", Arial, sans-serif;
         display: flex;
         flex-direction: column;
         align-items: center;
-        min-height: 100vh;
-        /* Mobile scroll fix */
-        height: 100dvh;
-        overflow: hidden;
-      }
-
-      .container {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        height: 100%;
-        max-width: 600px; /* Constrain width on tablets */
+        background: #fff;
         padding: 10px;
-        box-sizing: border-box;
-        gap: 10px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        max-width: 450px; /* Increased slightly for more buttons */
+        margin: 20px auto;
+        user-select: none;
       }
 
-      /* --- RESPONSIVE BOARD --- */
-      .board-frame {
-        width: 100%;
-        /* Maintain 9:10 aspect ratio for Xiangqi board */
-        aspect-ratio: 450/500;
+      .xq-board-wrapper {
         position: relative;
-        background: var(--board-bg);
-        border-radius: 4px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
-      }
-
-      /* Inner wrapper maintains coordinate system relative to container size */
-      .board-inner {
-        position: absolute;
-        top: 0;
-        left: 0;
         width: 100%;
-        height: 100%;
-        /* Grid system logic (9 cols x 10 rows) */
+        aspect-ratio: 9/10;
+        background: #fdf5e6;
+        border: 2px solid #8b5a2b;
+        margin-bottom: 10px;
       }
 
-      /* SVG Scaling */
-      svg.grid {
+      .xq-grid {
         width: 100%;
         height: 100%;
         display: block;
         pointer-events: none;
       }
+      .xq-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      /* SVG Lines */
       .line {
-        stroke: var(--line-color);
-        stroke-width: 2;
-        fill: none;
+        stroke: #4b3621;
+        stroke-width: 1.5;
         vector-effect: non-scaling-stroke;
       }
       .border {
-        stroke: var(--line-color);
+        stroke: #4b3621;
         stroke-width: 4;
         fill: none;
         vector-effect: non-scaling-stroke;
       }
       .river-text {
         font-family: "KaiTi", serif;
-        font-size: 34px;
-        fill: var(--line-color);
+        font-size: 8px;
+        fill: #4b3621;
         opacity: 0.8;
         text-anchor: middle;
         dominant-baseline: middle;
         font-weight: bold;
+        letter-spacing: 5px;
       }
 
-      /* Layers */
-      .layer {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-      }
-      .click-mask {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 100;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      /* PIECES - Percent based positioning for perfect alignment */
+      /* Pieces */
       .piece {
-        width: 11.11%; /* 1/9th of width */
-        height: 10%; /* 1/10th of height */
-        position: absolute;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10;
-        transition: top 0.15s, left 0.15s;
-      }
-
-      /* The visual circle inside the grid cell */
-      .piece::after {
-        content: attr(data-char);
-        width: 85%;
-        height: 85%;
-        background: #fdf5e6;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-family: "KaiTi", serif;
-        font-weight: bold;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4),
-          inset 0 2px 5px rgba(255, 255, 255, 0.9);
-        font-size: clamp(16px, 5vw, 28px); /* Responsive font size */
-      }
-      .piece.red::after {
-        color: var(--red);
-        border: 2px solid #c0392b;
-      }
-      .piece.black::after {
-        color: var(--black);
-        border: 2px solid #333;
-      }
-
-      /* MARKERS */
-      .marker {
         position: absolute;
         width: 11.11%;
         height: 10%;
         display: flex;
         justify-content: center;
         align-items: center;
+        transition: all 0.2s ease-out;
+        z-index: 20;
       }
-      .last::after {
-        content: "";
+      .piece-inner {
         width: 90%;
         height: 90%;
-        background: var(--highlight);
-        border-radius: 8px;
-      }
-      .select::after {
-        content: "";
-        width: 90%;
-        height: 90%;
-        background: var(--selected);
         border-radius: 50%;
-        box-shadow: 0 0 10px var(--selected);
+        background: #fcfcfc;
+        border: 2px solid #888;
+        box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.3);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: "KaiTi", "STKaiti", serif;
+        font-weight: bold;
+        font-size: clamp(12px, 3.5cqw, 28px);
+        container-type: inline-size;
+        position: relative;
       }
-      .dot::after {
+      .piece-inner::before {
         content: "";
-        width: 25%;
-        height: 25%;
-        background: rgba(0, 180, 0, 0.8);
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        right: 2px;
+        bottom: 2px;
         border-radius: 50%;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+      }
+      .red .piece-inner {
+        color: #c0392b;
+        border-color: #c0392b;
+      }
+      .black .piece-inner {
+        color: #2d3436;
+        border-color: #2d3436;
       }
 
-      /* --- TABS & CONTROLS --- */
-      .ui-panel {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        background: var(--glass);
-        border: 1px solid var(--glass-border);
-        border-radius: 8px;
-        overflow: hidden;
+      /* --- BLUE HIGHLIGHT (FILL SQUARE) --- */
+      .marker {
+        position: absolute;
+        width: 11.11%;
+        height: 10%;
+        z-index: 10;
       }
-
-      .tabs {
-        display: flex;
-        border-bottom: 1px solid var(--glass-border);
-      }
-      .tab {
-        flex: 1;
-        padding: 10px;
-        text-align: center;
-        cursor: pointer;
-        background: rgba(0, 0, 0, 0.2);
-        transition: 0.2s;
-        font-weight: bold;
-      }
-      .tab.active {
-        background: var(--tab-active);
-        color: white;
-      }
-
-      .tab-content {
-        flex: 1;
-        display: none;
-        flex-direction: column;
-        padding: 10px;
-        overflow: hidden;
-      }
-      .tab-content.active {
-        display: flex;
-      }
-
-      /* PLAYBACK BAR */
-      .playback-bar {
-        display: flex;
-        gap: 5px;
-        margin-bottom: 10px;
-      }
-      .pb-btn {
-        flex: 1;
-        padding: 10px 0;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-      }
-      .pb-btn:active {
-        background: rgba(255, 255, 255, 0.3);
-      }
-
-      .status {
-        text-align: center;
-        margin-bottom: 5px;
-        font-weight: bold;
-        color: #ff6b6b;
-        font-size: 14px;
-      }
-
-      .history {
-        flex: 1;
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 4px;
-        overflow-y: auto;
-        padding: 5px;
-        font-family: monospace;
-        font-size: 13px;
-      }
-      .row {
-        display: flex;
-        padding: 4px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      }
-      .row.current {
-        background: rgba(255, 215, 0, 0.2);
-        border-left: 3px solid gold;
-      }
-      .row span {
-        flex: 1;
-        cursor: pointer;
-      }
-
-      /* TOOLS TAB */
-      .tool-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-      }
-      .btn {
-        padding: 12px;
-        border-radius: 4px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
-        cursor: pointer;
-        font-weight: bold;
-      }
-      .btn-norm {
-        background: rgba(255, 255, 255, 0.1);
-      }
-      .btn-red {
-        background: #c0392b;
-        border: none;
-      }
-      .btn-green {
-        background: #27ae60;
-        border: none;
-      }
-      textarea {
+      .last-move::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
-        height: 80px;
-        background: rgba(0, 0, 0, 0.3);
-        color: white;
-        border: 1px solid #555;
-        resize: none;
-        margin-bottom: 10px;
+        height: 100%;
+        background: rgba(0, 160, 233, 0.3); /* Cyan/Blue */
+        border-radius: 12px;
         box-sizing: border-box;
       }
 
-      #splash {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0);
-        font-size: 4rem;
-        font-family: "KaiTi";
-        font-weight: 900;
-        color: #ff4757;
-        text-shadow: 0 5px 20px black;
-        pointer-events: none;
-        z-index: 200;
-        opacity: 0;
-        -webkit-text-stroke: 2px white;
-        white-space: nowrap;
+      /* Controls */
+      .xq-controls {
+        display: flex;
+        gap: 4px;
+        width: 100%;
       }
-      .pop {
-        animation: popAnim 1.2s ease-out forwards;
+      .xq-btn {
+        flex: 1;
+        padding: 10px 0;
+        border: 1px solid #ccc;
+        background: #f8f9fa;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        color: #444;
+        transition: background 0.1s;
+        font-size: 14px;
       }
-      @keyframes popAnim {
-        0% {
-          transform: translate(-50%, -50%) scale(0.5);
-          opacity: 0;
-        }
-        20% {
-          transform: translate(-50%, -50%) scale(1.2);
-          opacity: 1;
-        }
-        100% {
-          transform: translate(-50%, -50%) scale(1);
-          opacity: 0;
-        }
+      .xq-btn:hover {
+        background: #e9ecef;
+      }
+      .xq-btn:active {
+        background: #dde2e6;
+        transform: translateY(1px);
+      }
+      .xq-status {
+        font-size: 14px;
+        font-weight: bold;
+        color: #555;
+        margin-bottom: 8px;
+        text-align: center;
+        width: 100%;
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="board-frame" id="boardFrame">
-        <div class="board-inner">
-          <svg class="grid" viewBox="0 0 450 500" preserveAspectRatio="none">
-            <rect x="25" y="25" width="400" height="450" class="border" />
-            <line x1="25" y1="75" x2="425" y2="75" class="line" />
-            <line x1="25" y1="125" x2="425" y2="125" class="line" />
-            <line x1="25" y1="175" x2="425" y2="175" class="line" />
-            <line x1="25" y1="225" x2="425" y2="225" class="line" />
-            <line x1="25" y1="275" x2="425" y2="275" class="line" />
-            <line x1="25" y1="325" x2="425" y2="325" class="line" />
-            <line x1="25" y1="375" x2="425" y2="375" class="line" />
-            <line x1="25" y1="425" x2="425" y2="425" class="line" />
-            <line x1="225" y1="25" x2="225" y2="225" class="line" />
-            <line x1="225" y1="275" x2="225" y2="475" class="line" />
-            <line x1="75" y1="25" x2="75" y2="225" class="line" />
-            <line x1="75" y1="275" x2="75" y2="475" class="line" />
-            <line x1="125" y1="25" x2="125" y2="225" class="line" />
-            <line x1="125" y1="275" x2="125" y2="475" class="line" />
-            <line x1="175" y1="25" x2="175" y2="225" class="line" />
-            <line x1="175" y1="275" x2="175" y2="475" class="line" />
-            <line x1="275" y1="25" x2="275" y2="225" class="line" />
-            <line x1="275" y1="275" x2="275" y2="475" class="line" />
-            <line x1="325" y1="25" x2="325" y2="225" class="line" />
-            <line x1="325" y1="275" x2="325" y2="475" class="line" />
-            <line x1="375" y1="25" x2="375" y2="225" class="line" />
-            <line x1="375" y1="275" x2="375" y2="475" class="line" />
-            <line x1="175" y1="25" x2="275" y2="125" class="line" />
-            <line x1="275" y1="25" x2="175" y2="125" class="line" />
-            <line x1="175" y1="375" x2="275" y2="475" class="line" />
-            <line x1="275" y1="375" x2="175" y2="475" class="line" />
-
-            <text x="110" y="250" class="river-text">楚 河</text>
-            <text x="340" y="250" class="river-text">漢 界</text>
-          </svg>
-          <div id="markerLayer" class="layer"></div>
-          <div id="pieceLayer" class="layer"></div>
-          <div class="click-mask" onclick="ui.click(event)"></div>
-          <div id="splash">將 軍</div>
-        </div>
-      </div>
-
-      <div class="ui-panel">
-        <div class="tabs">
-          <div class="tab active" onclick="ui.switchTab('game')">Game</div>
-          <div class="tab" onclick="ui.switchTab('tools')">Tools</div>
-        </div>
-
-        <div id="tab-game" class="tab-content active">
-          <div id="status" class="status">Red to Move</div>
-          <div class="playback-bar">
-            <button class="pb-btn" onclick="game.goto(0)">|&lt;</button>
-            <button class="pb-btn" onclick="game.step(-1)">&lt;</button>
-            <button class="pb-btn" id="playBtn" onclick="game.togglePlay()">
-              ▶
-            </button>
-            <button class="pb-btn" onclick="game.step(1)">&gt;</button>
-            <button class="pb-btn" onclick="game.goto(9999)">&gt;|</button>
-          </div>
-          <div id="history" class="history"></div>
-        </div>
-
-        <div id="tab-tools" class="tab-content">
-          <div class="tool-grid">
-            <button class="btn btn-red" onclick="game.newGame()">
-              New Game
-            </button>
-            <button class="btn btn-norm" onclick="game.undo()">Undo</button>
-            <button class="btn btn-norm" onclick="ui.doFlip()">
-              Flip View
-            </button>
-            <button class="btn btn-norm" onclick="ui.doReflect()">
-              Reflect
-            </button>
-          </div>
-          <hr
-            style="
-              border: 0;
-              border-top: 1px solid rgba(255, 255, 255, 0.1);
-              margin: 10px 0;
-            "
-          />
-          <textarea id="fenBox" placeholder="Paste FEN/DhtmlXQ..."></textarea>
-          <div class="tool-grid">
-            <button class="btn btn-norm" onclick="game.load()">Load</button>
-            <button class="btn btn-green" onclick="game.export()">
-              Export
-            </button>
-          </div>
-        </div>
-      </div>
+    <div style="text-align: center; margin-top: 30px">
+      <h2>第三局：屏风马抵右当头炮</h2>
+      <div id="game1"></div>
     </div>
 
     <script>
-      const sfx = {
-        play(f, t, g = 0.3, d = 0.1) {
-          const c = new (window.AudioContext || window.webkitAudioContext)();
-          const o = c.createOscillator();
-          const gn = c.createGain();
-          o.type = t;
-          o.frequency.setValueAtTime(f, c.currentTime);
-          gn.gain.setValueAtTime(g, c.currentTime);
-          gn.gain.exponentialRampToValueAtTime(0.01, c.currentTime + d);
-          o.connect(gn);
-          gn.connect(c.destination);
-          o.start();
-          o.stop(c.currentTime + d);
-        },
-      };
+      class XiangqiPlayer {
+        constructor(containerId, moveString, startFen) {
+          this.container = document.getElementById(containerId);
+          if (!this.container) return;
 
-      const CN_NUMS = [
-        "",
-        "一",
-        "二",
-        "三",
-        "四",
-        "五",
-        "六",
-        "七",
-        "八",
-        "九",
-      ];
-      const CN_DIGITS = [
-        "",
-        "１",
-        "２",
-        "３",
-        "４",
-        "５",
-        "６",
-        "７",
-        "８",
-        "９",
-      ];
-      const CN_PIECES = {
-        rK: "帥",
-        rA: "仕",
-        rE: "相",
-        rN: "傌",
-        rR: "俥",
-        rC: "炮",
-        rP: "兵",
-        bK: "将",
-        bA: "士",
-        bE: "象",
-        bN: "馬",
-        bR: "車",
-        bC: "砲",
-        bP: "卒",
-        K: "帥",
-        A: "仕",
-        E: "相",
-        N: "傌",
-        R: "俥",
-        C: "炮",
-        P: "兵",
-        k: "将",
-        a: "士",
-        e: "象",
-        n: "馬",
-        r: "車",
-        c: "砲",
-        p: "卒",
-      };
-      const CN_DIR = { "+": "进", "-": "退", "=": "平" };
-
-      class Engine {
-        constructor() {
-          this.reset();
-        }
-        reset() {
-          this.board = Array(10)
-            .fill(null)
-            .map(() => Array(9).fill(null));
-          const start = [
-            ["bR", "bN", "bE", "bA", "bK", "bA", "bE", "bN", "bR"],
-            [null, null, null, null, null, null, null, null, null],
-            [null, "bC", null, null, null, null, null, "bC", null],
-            ["bP", null, "bP", null, "bP", null, "bP", null, "bP"],
-            [null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null, null],
-            ["rP", null, "rP", null, "rP", null, "rP", null, "rP"],
-            [null, "rC", null, null, null, null, null, "rC", null],
-            [null, null, null, null, null, null, null, null, null],
-            ["rR", "rN", "rE", "rA", "rK", "rA", "rE", "rN", "rR"],
-          ];
-          for (let y = 0; y < 10; y++)
-            for (let x = 0; x < 9; x++) this.board[y][x] = start[y][x];
-          this.turn = "r";
-          this.history = [];
-          this.idx = 0;
-        }
-        getPiece(x, y) {
-          if (x < 0 || x > 8 || y < 0 || y > 9) return null;
-          return this.board[y][x];
-        }
-        validate(fx, fy, tx, ty, p) {
-          if (fx === tx && fy === ty) return false;
-          const tgt = this.getPiece(tx, ty);
-          if (tgt && tgt[0] === p[0]) return false;
-          const dx = tx - fx,
-            dy = ty - fy,
-            adx = Math.abs(dx),
-            ady = Math.abs(dy);
-          const type = p[1],
-            red = p[0] === "r";
-          switch (type) {
-            case "K":
-              return (
-                tx >= 3 &&
-                tx <= 5 &&
-                (red ? ty >= 7 : ty <= 2) &&
-                adx + ady === 1
-              );
-            case "A":
-              return (
-                tx >= 3 &&
-                tx <= 5 &&
-                (red ? ty >= 7 : ty <= 2) &&
-                adx === 1 &&
-                ady === 1
-              );
-            case "E":
-              return (
-                (red ? ty >= 5 : ty <= 4) &&
-                adx === 2 &&
-                ady === 2 &&
-                !this.getPiece(fx + dx / 2, fy + dy / 2)
-              );
-            case "N":
-              if (adx === 1 && ady === 2)
-                return !this.getPiece(fx, fy + (dy > 0 ? 1 : -1));
-              if (adx === 2 && ady === 1)
-                return !this.getPiece(fx + (dx > 0 ? 1 : -1), fy);
-              return false;
-            case "R":
-              return (dx === 0 || dy === 0) && this.count(fx, fy, tx, ty) === 0;
-            case "C":
-              const c = this.count(fx, fy, tx, ty);
-              return (dx === 0 || dy === 0) && (tgt ? c === 1 : c === 0);
-            case "P":
-              const fwd = red ? -1 : 1;
-              const cross = red ? fy <= 4 : fy >= 5;
-              return (
-                (dy === fwd && dx === 0) || (cross && dy === 0 && adx === 1)
-              );
-          }
-          return false;
-        }
-        count(x1, y1, x2, y2) {
-          let c = 0,
-            dx = Math.sign(x2 - x1),
-            dy = Math.sign(y2 - y1),
-            x = x1 + dx,
-            y = y1 + dy,
-            safe = 0;
-          while ((x !== x2 || y !== y2) && safe++ < 20) {
-            if (this.getPiece(x, y)) c++;
-            x += dx;
-            y += dy;
-          }
-          return c;
-        }
-        inCheck(turn) {
-          let k = null,
-            opp = turn === "r" ? "b" : "r";
-          for (let y = 0; y < 10; y++)
-            for (let x = 0; x < 9; x++)
-              if (this.board[y][x] === turn + "K") k = { x, y };
-          if (!k) return true;
-          let ok = null;
-          for (let y = 0; y < 10; y++)
-            for (let x = 0; x < 9; x++)
-              if (this.board[y][x] === opp + "K") ok = { x, y };
-          if (ok && k.x === ok.x && this.count(k.x, k.y, ok.x, ok.y) === 0)
-            return true;
-          for (let y = 0; y < 10; y++)
-            for (let x = 0; x < 9; x++) {
-              let p = this.board[y][x];
-              if (p && p[0] === opp && this.validate(x, y, k.x, k.y, p))
-                return true;
-            }
-          return false;
-        }
-        getLegalMoves() {
-          let moves = [],
-            turn = this.turn;
-          for (let fy = 0; fy < 10; fy++)
-            for (let fx = 0; fx < 9; fx++) {
-              let p = this.board[fy][fx];
-              if (p && p[0] === turn) {
-                for (let ty = 0; ty < 10; ty++)
-                  for (let tx = 0; tx < 9; tx++) {
-                    if (this.validate(fx, fy, tx, ty, p)) {
-                      let cap = this.board[ty][tx];
-                      this.board[ty][tx] = p;
-                      this.board[fy][fx] = null;
-                      if (!this.inCheck(turn))
-                        moves.push({ fx, fy, tx, ty, p, cap });
-                      this.board[fy][fx] = p;
-                      this.board[ty][tx] = cap;
-                    }
-                  }
-              }
-            }
-          return moves;
-        }
-        move(fx, fy, tx, ty) {
-          if (this.idx !== this.history.length) return false;
-          let p = this.board[fy][fx];
-          if (!p || p[0] !== this.turn) return false;
-          let cap = this.board[ty][tx];
-          if (!this.validate(fx, fy, tx, ty, p)) return false;
-          this.board[ty][tx] = p;
-          this.board[fy][fx] = null;
-          if (this.inCheck(this.turn)) {
-            this.board[fy][fx] = p;
-            this.board[ty][tx] = cap;
-            return false;
-          }
-          let mvStr = `${fx}${fy}${tx}${ty}`;
-          this.history.push({ fx, fy, tx, ty, p, cap, mv: mvStr });
-          this.idx++;
-          this.turn = this.turn === "r" ? "b" : "r";
-          return cap;
-        }
-      }
-
-      /* --- UI --- */
-      const ui = {
-        flip: false,
-        reflect: false,
-        sel: null,
-
-        init() {
-          this.render();
-          this.updateInfo();
-        },
-
-        switchTab(t) {
-          document
-            .querySelectorAll(".tab")
-            .forEach((e) => e.classList.remove("active"));
-          document
-            .querySelectorAll(".tab-content")
-            .forEach((e) => e.classList.remove("active"));
-          event.target.classList.add("active");
-          document.getElementById("tab-" + t).classList.add("active");
-        },
-
-        doFlip() {
-          this.flip = !this.flip;
-          this.render();
-        },
-        doReflect() {
-          this.reflect = !this.reflect;
-          this.render();
-          this.updateInfo();
-        },
-
-        // RESPONSIVE PERCENTAGE COORDINATES
-        toPx(x, y) {
-          let rx = this.reflect ? 8 - x : x;
-          if (this.flip) {
-            rx = 8 - rx;
-            ry = 9 - y;
-          } else {
-            ry = y;
-          }
-          return { left: rx * 11.11, top: ry * 10 };
-        },
-
-        toLog(cx, cy) {
-          const rect = document
-            .getElementById("boardFrame")
-            .getBoundingClientRect();
-          // Since we use 100% width/height, calc based on rect
-          let x = Math.floor((cx - rect.left) / (rect.width / 9));
-          let y = Math.floor((cy - rect.top) / (rect.height / 10));
-
-          if (x < 0 || x > 8 || y < 0 || y > 9) return null;
-          if (this.flip) {
-            x = 8 - x;
-            y = 9 - y;
-          }
-          if (this.reflect) x = 8 - x;
-          return { x, y };
-        },
-
-        click(e) {
-          if (game.eng.idx !== game.eng.history.length || game.isGameOver)
-            return;
-          const c = this.toLog(e.clientX, e.clientY);
-          if (!c) return;
-          const p = game.eng.getPiece(c.x, c.y);
-
-          const handleMove = () => {
-            const cap = game.eng.move(this.sel.x, this.sel.y, c.x, c.y);
-            if (cap !== false) {
-              if (cap) sfx.play(200, "triangle", 0.2, 0.1);
-              else sfx.play(300, "square");
-              this.sel = null;
-              requestAnimationFrame(() => {
-                this.render();
-                this.updateInfo();
-                game.checkGameOver();
-              });
-            } else if (p && p[0] === game.eng.turn) {
-              this.sel = c;
-              sfx.play(150, "sine");
-              requestAnimationFrame(() => this.render());
-            } else {
-              this.sel = null;
-              requestAnimationFrame(() => this.render());
-            }
-          };
-          if (this.sel) handleMove();
-          else if (p && p[0] === game.eng.turn) {
-            this.sel = c;
-            sfx.play(150, "sine");
-            requestAnimationFrame(() => this.render());
-          }
-        },
-
-        render() {
-          const pL = document.getElementById("pieceLayer");
-          const mL = document.getElementById("markerLayer");
-          pL.innerHTML = "";
-          mL.innerHTML = "";
-
-          let board = game.eng.board;
-          if (game.eng.idx < game.eng.history.length) {
-            let tmp = new Engine();
-            if (game.startFen) game.loadFenTo(game.startFen, tmp);
-            for (let i = 0; i < game.eng.idx; i++) {
-              let m = game.eng.history[i];
-              tmp.board[m.ty][m.tx] = tmp.board[m.fy][m.fx];
-              tmp.board[m.fy][m.fx] = null;
-            }
-            board = tmp.board;
-          }
-
-          for (let y = 0; y < 10; y++)
-            for (let x = 0; x < 9; x++) {
-              let p = board[y][x];
-              let pos = this.toPx(x, y);
-
-              let last = game.eng.history[game.eng.idx - 1];
-              if (
-                last &&
-                ((last.fx === x && last.fy === y) ||
-                  (last.tx === x && last.ty === y))
-              ) {
-                let m = document.createElement("div");
-                m.className = "marker last";
-                m.style.left = pos.left + "%";
-                m.style.top = pos.top + "%";
-                mL.appendChild(m);
-              }
-
-              if (this.sel && this.sel.x === x && this.sel.y === y) {
-                let m = document.createElement("div");
-                m.className = "marker select";
-                m.style.left = pos.left + "%";
-                m.style.top = pos.top + "%";
-                mL.appendChild(m);
-                if (game.eng.idx === game.eng.history.length) {
-                  const tempMoves = game.eng.getLegalMoves();
-                  tempMoves
-                    .filter((m) => m.fx === x && m.fy === y)
-                    .forEach((m) => {
-                      let dPos = this.toPx(m.tx, m.ty);
-                      let d = document.createElement("div");
-                      d.className = "marker dot";
-                      d.style.left = dPos.left + "%";
-                      d.style.top = dPos.top + "%";
-                      mL.appendChild(d);
-                    });
-                }
-              }
-
-              if (p) {
-                let d = document.createElement("div");
-                d.className = `piece ${p[0] === "r" ? "red" : "black"}`;
-                d.dataset.char = CN_PIECES[p];
-                if (p[0] === "b" && p[1] === "K")
-                  d.dataset.char = CN_PIECES["k"];
-                if (p[0] === "r" && p[1] === "K")
-                  d.dataset.char = CN_PIECES["K"];
-                d.style.left = pos.left + "%";
-                d.style.top = pos.top + "%";
-                pL.appendChild(d);
-              }
-            }
-        },
-
-        updateInfo() {
-          const list = document.getElementById("history");
-          const statusEl = document.getElementById("status");
-          const playBtn = document.getElementById("playBtn");
-
-          playBtn.innerText = game.isPlaying ? "||" : "▶";
-
-          if (game.isGameOver) {
-            statusEl.style.color = "yellow";
-            statusEl.innerText = game.gameOverStatus;
-          } else {
-            statusEl.style.color = game.eng.turn === "r" ? "#ff6b6b" : "#aaa";
-            statusEl.innerText =
-              (game.eng.turn === "r" ? "Red" : "Black") + " to Move";
-            if (game.eng.inCheck(game.eng.turn))
-              statusEl.innerText += " - Check!";
-          }
-
-          list.innerHTML = "";
-          let tmp = new Engine();
-          if (game.startFen) game.loadFenTo(game.startFen, tmp);
-
-          for (let i = 0; i < game.eng.history.length; i += 2) {
-            let h1 = game.eng.history[i];
-            let h2 = game.eng.history[i + 1];
-            let not1 = game.genNotation(tmp, h1, this.reflect);
-            tmp.board[h1.ty][h1.tx] = tmp.board[h1.fy][h1.fx];
-            tmp.board[h1.fy][h1.fx] = null;
-            let not2 = h2 ? game.genNotation(tmp, h2, this.reflect) : "";
-            if (h2) {
-              tmp.board[h2.ty][h2.tx] = tmp.board[h2.fy][h2.fx];
-              tmp.board[h2.fy][h2.fx] = null;
-            }
-
-            let div = document.createElement("div");
-            // Highlight Current Move
-            let isCurr = i + 1 === game.eng.idx || i + 2 === game.eng.idx;
-            div.className = "row" + (isCurr ? " current" : "");
-            div.innerHTML = `<span>${
-              i / 2 + 1
-            }.</span><span onclick="game.goto(${
-              i + 1
-            })">${not1}</span><span onclick="game.goto(${
-              i + 2
-            })">${not2}</span>`;
-            list.appendChild(div);
-            if (isCurr) div.scrollIntoView({ block: "nearest" });
-          }
-        },
-
-        splash(txt) {
-          let el = document.getElementById("splash");
-          el.innerText = txt;
-          el.classList.remove("pop");
-          void el.offsetWidth;
-          el.classList.add("pop");
-          sfx.play(440, "sine", 0.5, 0.4);
-        },
-      };
-
-      const game = {
-        eng: new Engine(),
-        startFen:
-          "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1",
-        isGameOver: false,
-        gameOverStatus: "",
-        isPlaying: false,
-        playTimer: null,
-
-        newGame() {
-          if (!confirm("Start New Game?")) return;
-          this.eng.reset();
           this.startFen =
+            startFen ||
             "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1";
-          document.getElementById("fenBox").value = "";
-          this.stopPlay();
-          ui.sel = null;
-          ui.flip = false;
-          ui.reflect = false;
-          this.isGameOver = false;
-          this.gameOverStatus = "";
-          ui.init();
-          sfx.play(400, "sawtooth");
-        },
-        reset() {
-          this.newGame();
-        },
-        undo() {
-          this.stopPlay();
-          if (this.eng.idx > 0 && this.eng.idx === this.eng.history.length) {
-            this.eng.history.pop();
-            this.eng.idx--;
-            this.eng.turn = this.eng.turn === "r" ? "b" : "r";
-            let tmp = new Engine();
-            this.loadFenTo(this.startFen, tmp);
-            this.eng.history.forEach((m) => {
-              tmp.board[m.ty][m.tx] = tmp.board[m.fy][m.fx];
-              tmp.board[m.fy][m.fx] = null;
-            });
-            this.eng.board = tmp.board;
-            this.isGameOver = false;
-            ui.sel = null;
-            ui.render();
-            ui.updateInfo();
-          }
-        },
-
-        // PLAYBACK
-        goto(i) {
-          this.stopPlay();
-          this.eng.idx = i;
-          ui.sel = null;
-          ui.render();
-          ui.updateInfo();
-        },
-        step(d) {
-          let n = this.eng.idx + d;
-          if (n >= 0 && n <= this.eng.history.length) this.goto(n);
-        },
-        togglePlay() {
-          if (this.isPlaying) this.stopPlay();
-          else {
-            this.isPlaying = true;
-            ui.updateInfo();
-            this.playTimer = setInterval(() => {
-              if (this.eng.idx < this.eng.history.length)
-                this.goto(this.eng.idx + 1);
-              else this.stopPlay();
-            }, 1000);
-          }
-        },
-        stopPlay() {
-          clearInterval(this.playTimer);
+          this.moves = [];
+          this.currentMoveIndex = -1;
+          this.isFlipped = false;
           this.isPlaying = false;
-          ui.updateInfo();
-        },
+          this.playTimer = null;
 
-        load() {
-          let txt = document.getElementById("fenBox").value.trim();
-          if (!txt) return;
-          let fen = txt;
-          if (txt.includes("[DhtmlXQ]")) {
-            let f = txt.match(/_fen](.*?)\[/);
-            if (f) fen = f[1];
-          }
-          if (fen.includes("/")) {
-            this.eng.reset();
-            this.loadFenTo(fen, this.eng);
-            this.startFen = fen;
-            this.isGameOver = false;
-            this.gameOverStatus = "";
-            this.checkGameOver();
-            ui.init();
-            sfx.play(500, "square");
-          }
-        },
-        loadFenTo(fen, engine) {
-          let rows = fen.split(" ")[0].split("/");
-          engine.board = Array(10)
+          this.PIECES = {
+            r: "車",
+            n: "馬",
+            e: "象",
+            b: "象",
+            a: "士",
+            k: "將",
+            c: "砲",
+            p: "卒",
+            R: "俥",
+            N: "傌",
+            E: "相",
+            B: "相",
+            A: "仕",
+            K: "帥",
+            C: "炮",
+            P: "兵",
+          };
+
+          this.engine = { board: [], turn: "r" };
+          this.parseMoves(moveString);
+          this.resetBoard();
+          this.initUI();
+          this.render();
+        }
+
+        resetBoard() {
+          const fenParts = this.startFen.split(" ");
+          const rows = fenParts[0].split("/");
+          this.engine.board = Array(10)
             .fill(null)
             .map(() => Array(9).fill(null));
+
           rows.forEach((r, y) => {
             let x = 0;
-            for (let c of r) {
-              if (!isNaN(c)) x += parseInt(c);
-              else {
-                let color = c === c.toUpperCase() ? "r" : "b";
-                let t = c.toUpperCase();
-                if (t === "H") t = "N";
-                if (t === "B") t = "E";
-                engine.board[y][x] = color + t;
+            for (let char of r) {
+              if (!isNaN(char)) {
+                x += parseInt(char);
+              } else {
+                let color = char === char.toUpperCase() ? "r" : "b";
+                this.engine.board[y][x] = color + char;
                 x++;
               }
             }
           });
-          engine.turn = fen.split(" ")[1] || "r";
-        },
-        checkGameOver() {
-          const moves = this.eng.getLegalMoves();
-          const opp = this.eng.turn === "r" ? "b" : "r";
-          const col = opp === "r" ? "Red" : "Black";
-          if (moves.length === 0) {
-            this.isGameOver = true;
-            if (this.eng.inCheck(this.eng.turn)) {
-              this.gameOverStatus = `${col} Wins (Checkmate)`;
-              ui.splash("绝 杀");
-            } else {
-              this.gameOverStatus = `Stalemate`;
-              ui.splash("闷 宫");
+          this.engine.turn = fenParts[1] || "r";
+          this.currentMoveIndex = -1;
+        }
+
+        parseMoves(str) {
+          let raw = str || "";
+          if (raw.includes("movelist")) {
+            const match = raw.match(/\[DhtmlXQ_movelist\](.*?)\[/);
+            if (match) raw = match[1];
+          }
+          raw = raw.replace(/[^0-9]/g, "");
+          this.moves = [];
+          for (let i = 0; i < raw.length; i += 4) {
+            this.moves.push({
+              fx: parseInt(raw[i]),
+              fy: parseInt(raw[i + 1]),
+              tx: parseInt(raw[i + 2]),
+              ty: parseInt(raw[i + 3]),
+            });
+          }
+        }
+
+        step(direction) {
+          if (direction === 1) {
+            if (this.currentMoveIndex >= this.moves.length - 1) {
+              this.stopPlay();
+              return;
             }
-          } else if (this.eng.inCheck(this.eng.turn)) ui.splash("將 軍");
-          ui.updateInfo();
-        },
-
-        genNotation(tempEng, move, isReflect) {
-          const { fx, fy, tx, ty, p } = move;
-          const red = p[0] === "r";
-          const type = p[1];
-          let name = CN_PIECES[p];
-
-          let srcF, dstF;
-          if (!isReflect) {
-            srcF = red ? 9 - fx : fx + 1;
-            dstF = red ? 9 - tx : tx + 1;
+            this.currentMoveIndex++;
+            const m = this.moves[this.currentMoveIndex];
+            m.captured = this.engine.board[m.ty][m.tx];
+            this.engine.board[m.ty][m.tx] = this.engine.board[m.fy][m.fx];
+            this.engine.board[m.fy][m.fx] = null;
           } else {
-            srcF = red ? fx + 1 : 9 - fx;
-            dstF = red ? tx + 1 : 9 - tx;
+            if (this.currentMoveIndex < 0) return;
+            const m = this.moves[this.currentMoveIndex];
+            this.engine.board[m.fy][m.fx] = this.engine.board[m.ty][m.tx];
+            this.engine.board[m.ty][m.tx] = m.captured;
+            this.currentMoveIndex--;
+          }
+          this.render();
+        }
+
+        initUI() {
+          this.container.classList.add("xq-player");
+          this.container.innerHTML = `
+            <div class="xq-status">Ready</div>
+            <div class="xq-board-wrapper">
+                <svg class="xq-grid" viewBox="0 0 450 500" preserveAspectRatio="none">
+                    <rect x="0" y="0" width="450" height="500" fill="#fdf5e6"/>
+                    <rect x="25" y="25" width="400" height="450" class="border"/>
+                    ${[75, 125, 175, 225, 275, 325, 375, 425]
+                      .map(
+                        (y) =>
+                          `<line x1="25" y1="${y}" x2="425" y2="${y}" class="line"/>`
+                      )
+                      .join("")}
+                    ${[75, 125, 175, 275, 325, 375]
+                      .map(
+                        (x) =>
+                          `<line x1="${x}" y1="25" x2="${x}" y2="225" class="line"/><line x1="${x}" y1="275" x2="${x}" y2="475" class="line"/>`
+                      )
+                      .join("")}
+                    <line x1="225" y1="25" x2="225" y2="225" class="line"/>
+                    <line x1="225" y1="275" x2="225" y2="475" class="line"/>
+                    <line x1="175" y1="25" x2="275" y2="125" class="line"/>
+                    <line x1="275" y1="25" x2="175" y2="125" class="line"/>
+                    <line x1="175" y1="375" x2="275" y2="475" class="line"/>
+                    <line x1="275" y1="375" x2="175" y2="475" class="line"/>
+                    
+                    <text x="110" y="250" class="river-text" style="font-size:36px">楚 河</text>
+                    
+                    <g transform="translate(320, 230) scale(0.045)">
+                      <path fill="#AF3636" d="M77.1,590 C77,503.3 76.7,417.2 77.1,331 C77.2,289.2 83.4,248.3 101.8,210.1 C131.2,149.2 179.1,112.3 246.1,100.7 C258,98.7 269.9,97.7 281.9,97.7 465.2,97.8 648.5,97.6 831.8,97.9 871.2,98 908.8,106.6 942.9,127.2 987.4,154.1 1015.2,193.2 1027,243.7 1029.8,255.4 1031.1,267.3 1031.1,279.3 1031.1,435 1031.2,590.6 1030.9,746.3 1030.9,789.2 1022.1,830.1 999.2,867.2 974.8,906.7 939,928.9 894.4,938.1 882,940.6 869.4,941.2 856.7,941.2 702.8,941.1 549,941.4 395.2,940.9 354.6,940.8 317.2,928.7 286.8,900.7 251.7,868.4 231.2,827.8 224.1,780.5 222.5,769.8 222.1,759 222.1,748.1 222.2,686.5 222.2,624.8 222.1,563.2 222.1,551.8 222.9,540.5 224.1,529.3 224.5,526 225.8,525.2 228.9,525.2 259.2,525.3 289.5,525.4 319.9,525.2 324.4,525.2 324,527.5 324,530.5 324,604.1 323.9,677.8 324.1,751.5 324.2,775 330.5,796.8 346,815.2 358.5,830.1 374.5,838.9 394.1,839.1 431.9,839.5 469.7,839.4 507.6,839.4 615.9,839.4 724.2,839.4 832.5,839.4 843.5,839.4 854.5,839.7 865.5,839.4 889.9,838.7 906.7,826.6 917.2,805.3 925.9,787.5 928.7,768.2 930.2,748.7 931.8,727.2 931.1,705.7 931.1,684.2 931.2,555.2 931.2,426.2 931.1,297.3 931.1,280.9 930.1,264.5 923.1,249.4 911.1,223.2 889.3,209.5 862.3,202.8 852.7,200.5 842.9,199.6 833.1,199.6 648.2,199.7 463.4,199.8 278.6,199.5 235.1,199.4 201.1,227.1 188.1,269.1 182,289 179.1,309.4 179.1,330.1 179,472.6 179,615.1 179,757.6 179,769.1 178.9,780.6 178.9,792.1 178.6,821.2 187.2,848.1 199.6,874 211.2,898.3 227.8,918.3 250.2,933.4 251.6,934.4 253.4,935.1 253.9,937.2 252.2,938.4 250.3,937.9 248.6,937.9 215.3,938 181.9,938.1 148.6,938.1 144.3,938.1 140,937.6 135.7,937 131.6,936.5 128.2,934.6 125.3,931.6 106.6,912.6 95,889.5 87.4,864.4 80.1,840.6 76.7,816.4 76.8,791.5 77.1,724.5 77,657.5 77.1,590 z" />
+                      <path fill="#B13B3C" d="M877,396 C877,519.8 877,643.1 877,766.4 877,773.4 877,773.2 870.3,774.3 860.9,775.9 851.4,776.2 841.9,776.2 699.5,776.2 557,776.2 414.5,776.2 404.4,776.2 394.2,775.9 384.1,775.3 380.6,775 379.2,774 379,770.3 378.2,758.8 378.1,747.4 378.1,735.9 378.1,594.7 378.1,453.6 378.1,312.5 378.1,302.5 378.1,292.5 378.8,282.5 379.1,279 380.3,278.5 383.2,278.5 407.5,278.4 431.9,277.9 456.2,277.9 576.5,277.8 696.8,277.8 817.1,277.8 833.6,277.8 850.1,276.9 866.6,278.6 877.1,279.6 877.2,279.5 877.2,290 877.1,325.2 877.1,360.3 877,396 z" />
+                      <path fill="#B03637" d="M267.8,382.3 C250,374.7 238.6,362.2 234.9,343.3 230.6,321.2 240.8,291.3 271.6,281.6 296,273.8 333.2,288.6 339.1,323 342.8,344.7 331,369.1 310.6,379.7 296.7,387 282.7,387.7 267.8,382.3 z" />
+                      <path fill="#FDFCFC" d="M536,289.5 C562.7,289.7 588.8,288.6 615,289.7 619.7,289.9 621.5,290.8 621.5,296.1 621.7,364.4 621.9,432.7 621.4,501 621.3,503 622.4,505.7 620.6,506.6 618.6,507.7 616.7,505.4 614.9,504.3 607.7,499.7 601.6,493.7 595.6,487.7 538.8,430.7 482,373.7 425.1,316.7 416.8,308.4 408.3,300.1 400.2,290.1 445.9,288.4 490.7,289.8 536,289.5 z" />
+                      <path fill="#FDFDFD" d="M402.8,765 C399.7,763.3 402.3,762.2 403,761.3 408.7,755 414.3,748.6 420.3,742.6 473.1,689.8 525.9,637.1 578.7,584.4 586.8,576.3 594.8,567.9 602.9,559.8 607.4,555.4 612.4,551.5 618,548.4 620.2,547.1 621.4,547.4 621.4,550.2 621.4,551.6 621.4,552.9 621.4,554.2 621.5,608 621.5,661.8 621.6,715.7 621.6,730 621.5,744.3 621.8,758.6 622,763.5 620.8,765.1 615.6,765.1 544.8,764.9 474,765 402.8,765 z" />
+                      <path fill="#FEFDFD" d="M634,318 C634.1,309.7 634.5,301.8 634.4,294 634.3,290.6 635.7,289.8 638.8,289.8 676.6,289.7 714.4,288.8 752.3,289.2 784.3,289.5 816.3,289.4 848.3,289.6 849.8,289.6 852.1,288.7 852.8,290.3 853.7,292 851.5,293 850.4,294.2 834.3,312.4 817.2,329.7 799.7,346.6 757.2,387.3 716.5,429.8 674.3,470.8 663,481.7 652.9,493.7 640.5,503.3 639.6,504.1 638.7,504.8 637.7,505.4 636.7,506 636,507.4 634.7,506.7 633.5,506 634.1,504.6 634.1,503.5 634,485 633.9,466.5 633.9,448 633.9,404.8 634,361.7 634,318 z" />
+                      <path fill="#FEFDFD" d="M828.5,737.5 C836,744.6 842.8,752 848.7,760.1 849.6,761.4 851.6,762.5 850.6,764.3 849.9,765.7 847.9,764.9 846.5,764.9 800.3,765 754.2,765.1 708,765.2 685.7,765.2 663.4,765 641.1,765.3 636.3,765.3 634.9,764 634.7,759.2 632.7,711.6 634.5,664 633.9,616.3 633.7,594.3 633.3,572.3 634.8,550.4 634.9,549.4 635,548.5 635.1,546.8 640.9,550.9 645.7,555.2 650.3,559.7 694.1,603.5 737.9,647.4 781.7,691.2 797.1,706.6 812.7,721.9 828.5,737.5 z" />
+                      <path fill="#FEFDFD" d="M517,520.9 C476.4,520.8 436.2,521.4 396.1,520.6 392.9,520.5 391,520.5 390.9,516.2 390.6,446.2 390.6,376.3 391.1,306.3 391.1,305.6 391.1,305 391.2,304.1 393.5,303.8 394.8,305.6 396.3,306.7 401.6,310.7 406.5,315.3 411,320.2 435.7,347.1 462.6,371.7 488.2,397.8 526.8,437.1 567,474.8 605.8,514.1 606,514.3 606.3,514.5 606.5,514.8 607.6,516.3 610.5,517.3 609.8,519.2 609.1,521.3 606.3,520.2 604.4,520.3 575.5,522 546.5,520.5 517,520.9 z" />
+                      <path fill="#FDFDFD" d="M661.4,501.4 C685.6,477.3 709.6,453.4 733.5,429.5 770.5,392.5 807.5,355.5 844.4,318.4 848.4,314.4 853.2,312 858,309.3 860.3,308 861.2,308.6 861.3,311.3 861.5,317.6 862.1,323.9 862.1,330.2 862.2,386.2 862.2,442.2 862.1,498.2 862.1,504.3 861.4,510.5 861.4,516.6 861.4,519.8 860.1,520.5 857.2,520.5 850.7,520.5 844.2,520.9 837.7,520.9 783.8,521 729.8,521 675.8,521.1 666.4,521.1 656.9,521.1 646.1,521.1 650.9,512.8 656.1,507.3 661.4,501.4 z" />
+                      <path fill="#FEFDFD" d="M864.3,678 C864.3,701 864.3,723.5 864.2,746 864.2,747.3 865.1,749.3 863.3,750 862.1,750.5 861,749.1 859.9,748.4 853.8,744.5 848.2,740.1 843.1,735 784.2,676.1 725.3,617.2 666.5,558.2 660.8,552.6 655.5,546.6 650.1,540.7 649.3,539.8 647.7,538.8 648.4,537.4 649.1,536 650.8,536.7 652,536.6 677.2,535.5 702.3,536.1 727.5,536.2 755.9,536.2 784.4,535.9 812.9,536 828.4,536 843.9,536.6 859.4,536.8 863.3,536.8 864.3,538.2 864.3,542.1 864.2,587.2 864.3,632.4 864.3,678 z" />
+                      <path fill="#FEFDFD" d="M591.6,536.3 C595.9,536.4 599.7,536.4 603.6,536.6 604.3,536.6 605.4,536.7 605.8,537.2 606.6,538.2 605.4,539 604.8,539.6 599.4,545.5 594.1,551.6 588.4,557.1 539.3,604.6 492.3,654.3 443,701.6 431.3,712.8 420.2,724.5 409.5,736.7 404.3,742.5 398.5,747.7 392.3,753.1 390.8,749.4 391.1,746 391.1,742.8 391,678.5 391,614.1 391,549.8 391,536.2 391.2,536 405.1,536 462.3,536 519.5,536.1 576.6,536.1 581.5,536.1 586.3,536.2 591.6,536.3 z" />
+                    </g>
+                </svg>
+                <div class="xq-layer markers"></div>
+                <div class="xq-layer pieces"></div>
+            </div>
+            <div class="xq-controls">
+                <button class="xq-btn" data-act="start">|&lt;</button>
+                <button class="xq-btn" data-act="prev">&lt;</button>
+                <button class="xq-btn" data-act="play">▶</button>
+                <button class="xq-btn" data-act="next">&gt;</button>
+                <button class="xq-btn" data-act="end">&gt;|</button>
+                <button class="xq-btn" data-act="flip">Flip</button>
+            </div>
+        `;
+
+          this.container.querySelectorAll(".xq-btn").forEach((btn) => {
+            btn.onclick = () => {
+              const act = btn.dataset.act;
+              if (act === "start") {
+                this.stopPlay();
+                while (this.currentMoveIndex >= 0) this.step(-1);
+              }
+              if (act === "end") {
+                this.stopPlay();
+                while (this.currentMoveIndex < this.moves.length - 1)
+                  this.step(1);
+              }
+              if (act === "prev") {
+                this.stopPlay();
+                this.step(-1);
+              }
+              if (act === "next") {
+                this.stopPlay();
+                this.step(1);
+              }
+              if (act === "play") this.togglePlay();
+              if (act === "flip") {
+                this.isFlipped = !this.isFlipped;
+                this.render();
+              }
+            };
+          });
+
+          this.els = {
+            pieces: this.container.querySelector(".pieces"),
+            markers: this.container.querySelector(".markers"),
+            status: this.container.querySelector(".xq-status"),
+            playBtn: this.container.querySelector('[data-act="play"]'),
+          };
+        }
+
+        render() {
+          this.els.pieces.innerHTML = "";
+          this.els.markers.innerHTML = "";
+
+          if (this.currentMoveIndex >= 0) {
+            const m = this.moves[this.currentMoveIndex];
+            [
+              { x: m.fx, y: m.fy },
+              { x: m.tx, y: m.ty },
+            ].forEach((pos) => {
+              const mk = document.createElement("div");
+              mk.className = "marker last-move";
+              const px = this.toPx(pos.x, pos.y);
+              mk.style.left = px.left + "%";
+              mk.style.top = px.top + "%";
+              this.els.markers.appendChild(mk);
+            });
           }
 
-          // Multi-piece Logic (Pawns etc)
-          let sameCol = [];
-          if (!["A", "E", "K"].includes(type)) {
-            // Exclude King/Advisor/Elephant
-            for (let y = 0; y < 10; y++)
-              if (tempEng.board[y][fx] === p) sameCol.push(y);
-          }
-
-          let prefix = "";
-          if (sameCol.length > 1) {
-            if (red) sameCol.sort((a, b) => a - b);
-            else sameCol.sort((a, b) => b - a);
-            let idx = sameCol.indexOf(fy);
-            if (sameCol.length === 2) prefix = idx === 0 ? "前" : "后";
-            else if (sameCol.length === 3)
-              prefix = idx === 0 ? "前" : idx === 1 ? "中" : "后";
-            else {
-              const P_MAP = ["前", "二", "三", "四", "五"];
-              prefix = idx === sameCol.length - 1 ? "后" : P_MAP[idx];
-            }
-            name = prefix + name;
-          }
-
-          const dy = ty - fy;
-          let dir = fy === ty ? "=" : (red ? dy < 0 : dy > 0) ? "+" : "-";
-          let dest = "";
-          if (["R", "C", "P", "K"].includes(type) && dir !== "=") {
-            let dist = Math.abs(dy);
-            dest = red ? CN_NUMS[dist] : CN_DIGITS[dist];
-          } else {
-            dest = red ? CN_NUMS[dstF] : CN_DIGITS[dstF];
-          }
-
-          if (sameCol.length > 1) return name + CN_DIR[dir] + dest;
-          let fChar = red ? CN_NUMS[srcF] : CN_DIGITS[srcF];
-          return name + fChar + CN_DIR[dir] + dest;
-        },
-
-        export() {
-          let fen = "";
           for (let y = 0; y < 10; y++) {
-            let e = 0;
             for (let x = 0; x < 9; x++) {
-              let p = this.eng.board[y][x];
-              if (!p) e++;
-              else {
-                if (e) fen += e;
-                e = 0;
-                let c = p[1];
-                if (c === "N") c = "H";
-                if (c === "E") c = "B";
-                fen += p[0] === "r" ? c.toUpperCase() : c.toLowerCase();
+              const p = this.engine.board[y][x];
+              if (p) {
+                const el = document.createElement("div");
+                const color = p[0] === "r" ? "red" : "black";
+                const char = this.PIECES[p[1]] || p[1];
+                el.className = `piece ${color}`;
+                el.innerHTML = `<div class="piece-inner">${char}</div>`;
+                const px = this.toPx(x, y);
+                el.style.left = px.left + "%";
+                el.style.top = px.top + "%";
+                this.els.pieces.appendChild(el);
               }
             }
-            if (e) fen += e;
-            if (y < 9) fen += "/";
           }
-          fen += ` ${this.eng.turn} - - 0 1`;
-          let mvStr = this.eng.history.map((h) => h.mv).join("");
-          let tmp = new Engine();
-          if (this.startFen) this.loadFenTo(this.startFen, tmp);
-          let movesTxt = "";
-          this.eng.history.forEach((h, i) => {
-            let not = this.genNotation(tmp, h, false);
-            if (i % 2 === 0) movesTxt += `${i / 2 + 1}. ${not} `;
-            else movesTxt += `${not}\n`;
-            tmp.board[h.ty][h.tx] = tmp.board[h.fy][h.fx];
-            tmp.board[h.fy][h.fx] = null;
-          });
-          let output = `[DhtmlXQ_fen]${this.startFen}[/DhtmlXQ_fen]\n[DhtmlXQ_binit]${mvStr}[/DhtmlXQ_binit]\n开始局面: ${this.startFen}\n着法:\n${movesTxt}\n使用皮卡鱼象棋在线分析: https://www.xiangqiai.com`;
-          document.getElementById("fenBox").value = output;
-          navigator.clipboard.writeText(output);
-          alert("Full Format Copied!");
-        },
-      };
 
-      ui.init();
-    </script>
-  </body>
-</html>
+          this.els.status.innerText = `Move: ${this.currentMoveIndex + 1} / ${
+            this.moves.length
+          }`;
+          this.els.playBtn.innerText = this.isPlaying ? "||" : "▶";
+        }
+
+        toPx(x, y) {
+          let rx = x,
+            ry = y;
+          if (this.isFlipped) {
+            rx = 8 - x;
+            ry = 9 - y;
+          }
+          return { left: rx * 11.11, top: ry * 10 };
+        }
+
+        togglePlay() {
+          if (this.isPlaying) this.stopPlay();
+          else {
+            this.isPlaying = true;
+            this.render();
+            this.playTimer = setInterval(() => {
+              if (this.currentMoveIndex < this.moves.length - 1) this.step(1);
+              else this.stopPlay();
+            }, 1000);
+          }
+        }
+
+        stopPlay() {
+          this.isPlaying = false;
+          clearInterval(this.playTimer);
+          this.render();
+        }
+      }
+
+      // CREATE PLAYERS
+      new XiangqiPlayer(
+        "game1",
+        "774710227967706219078070897920421727304109190010262563647973121666657282736370726564101467557279636279692728828628238689627269687279898855438887432287672343"
+      );
+    
