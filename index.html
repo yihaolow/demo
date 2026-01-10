@@ -3,46 +3,66 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Xiangqi Mini Player</title>
+    <title>Xiangqi Multi-Game Tool</title>
     <style>
-      /* --- GLOBAL LAYOUT --- */
+      /* =========================================================
+         PREMIUM AESTHETIC (RESTORED)
+         ========================================================= */
+
+      /* 1. Global Page Reset */
       body {
-        font-family: "Helvetica Neue", Arial, sans-serif;
-        background-color: #f0f2f5;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
         margin: 0;
         padding: 20px;
-      }
-      .game-container {
-        margin-bottom: 60px; /* Space between different games */
-        text-align: center;
-      }
-      h2 {
-        color: #333;
-        margin-bottom: 15px;
+        line-height: 1.6;
       }
 
-      /* --- PLAYER CSS (Scoped to .xq-player) --- */
+      .main-wrapper {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 10px;
+      }
+
       .xq-player {
-        font-family: "Helvetica Neue", Arial, sans-serif;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 40px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        background: #fff;
-        padding: 10px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        max-width: 450px;
-        margin: 0 auto; /* Centered */
-        user-select: none;
+        width: 100%;
+        box-sizing: border-box;
       }
 
+      .game-title {
+        font-size: 1.4rem;
+        margin: 0 0 20px 0;
+        color: #2c3e50;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #eee;
+        text-align: center;
+        font-weight: 700;
+        width: 100%;
+      }
+
+      /* 2. The Board (Wood Texture) */
       .xq-board-wrapper {
         position: relative;
         width: 100%;
         aspect-ratio: 9/10;
-        background: #fdf5e6;
-        border: 2px solid #8b5a2b;
-        margin-bottom: 10px;
+        background-color: #eecfa1;
+        background-image: linear-gradient(135deg, #eecfa1 0%, #e6b980 100%);
+        border: 3px solid #8b5a2b;
+        border-radius: 4px;
+        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        user-select: none;
+        box-sizing: border-box;
       }
 
       .xq-grid {
@@ -51,6 +71,30 @@
         display: block;
         pointer-events: none;
       }
+      .line {
+        stroke: #5d4037;
+        stroke-width: 1.5;
+        vector-effect: non-scaling-stroke;
+        opacity: 0.8;
+      }
+      .border {
+        stroke: #5d4037;
+        stroke-width: 4;
+        fill: none;
+        vector-effect: non-scaling-stroke;
+      }
+      .river-text {
+        font-family: "KaiTi", "STKaiti", "SimKai", serif;
+        font-size: 38px;
+        fill: #5d4037;
+        opacity: 0.4;
+        text-anchor: middle;
+        dominant-baseline: middle;
+        font-weight: bold;
+        letter-spacing: 10px;
+      }
+
+      /* 3. The Pieces (Ivory Style) */
       .xq-layer {
         position: absolute;
         top: 0;
@@ -60,153 +104,173 @@
         pointer-events: none;
       }
 
-      /* SVG Lines */
-      .line {
-        stroke: #4b3621;
-        stroke-width: 1.5;
-        vector-effect: non-scaling-stroke;
-      }
-      .border {
-        stroke: #4b3621;
-        stroke-width: 4;
-        fill: none;
-        vector-effect: non-scaling-stroke;
-      }
-      .river-text {
-        font-family: "KaiTi", "STKaiti", serif;
-        font-size: 36px;
-        fill: #4b3621;
-        opacity: 0.8;
-        text-anchor: middle;
-        dominant-baseline: middle;
-        font-weight: bold;
-        letter-spacing: 5px;
-      }
-
-      /* Pieces */
       .piece {
         position: absolute;
-        width: 11.11%;
+        width: calc(100% / 9);
         height: 10%;
         display: flex;
         justify-content: center;
         align-items: center;
-        transition: all 0.2s ease-out;
+        transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+          top 0.2s, left 0.2s;
         z-index: 20;
       }
+
       .piece-inner {
-        width: 90%;
-        height: 90%;
+        width: 88%;
+        height: 88%;
         border-radius: 50%;
-        background: #fcfcfc;
-        border: 2px solid #888;
-        box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.3);
+        background: #fdfdfd;
+        /* THE ORIGINAL 3D AESTHETIC */
+        background: radial-gradient(circle at 30% 30%, #fff, #f4f4f4);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3),
+          inset 0 -3px 2px rgba(0, 0, 0, 0.1);
+        border: 2px solid #ccc;
+        box-sizing: border-box;
+
         display: flex;
         justify-content: center;
         align-items: center;
-        font-family: "KaiTi", "STKaiti", serif;
+
+        /* ORIGINAL FONT */
+        font-family: "KaiTi", "STKaiti", "SimKai", serif;
         font-weight: bold;
-        font-size: clamp(12px, 3.5cqw, 28px);
-        container-type: inline-size;
+        font-size: clamp(14px, 4cqw, 32px);
+        line-height: 1; /* Helps centering */
         position: relative;
       }
+
       .piece-inner::before {
         content: "";
         position: absolute;
-        top: 2px;
-        left: 2px;
-        right: 2px;
-        bottom: 2px;
+        top: 3px;
+        left: 3px;
+        right: 3px;
+        bottom: 3px;
         border-radius: 50%;
-        border: 1px solid rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(0, 0, 0, 0.1);
       }
+
+      /* --- ALIGNMENT FIX START --- */
+      /* This span allows us to move text without moving the circle */
+      .piece-text {
+        position: relative;
+        display: block;
+      }
+
+      /* RED PIECES */
       .red .piece-inner {
-        color: #c0392b;
-        border-color: #c0392b;
+        color: #d63031;
+        border-color: #d63031;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
       }
+      .red .piece-inner::before {
+        border-color: rgba(214, 48, 49, 0.2);
+      }
+
+      /* THE FIX: Adjust this number to move Red text UP or DOWN */
+      .red .piece-text {
+        top: -4px; /* Negative moves UP, Positive moves DOWN */
+      }
+
+      /* BLACK PIECES */
       .black .piece-inner {
         color: #2d3436;
         border-color: #2d3436;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
       }
+      .black .piece-inner::before {
+        border-color: rgba(45, 52, 54, 0.2);
+      }
+      .black .piece-text {
+        top: 0px; /* Keep black as is */
+      }
+      /* --- ALIGNMENT FIX END --- */
 
-      /* --- BLUE HIGHLIGHT (FILL SQUARE) --- */
+      /* 4. Highlights & Controls */
       .marker {
         position: absolute;
-        width: 11.11%;
+        width: calc(100% / 9);
         height: 10%;
         z-index: 10;
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
       .last-move::after {
         content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 160, 233, 0.3);
-        border-radius: 12px;
+        background: rgba(0, 168, 255, 0.25);
+        border: 2px solid rgba(0, 168, 255, 0.6);
+        border-radius: 8px;
         box-sizing: border-box;
+        transform: scale(0.9);
       }
 
-      /* Controls */
-      .xq-controls {
-        display: flex;
-        gap: 4px;
-        width: 100%;
-      }
-      .xq-btn {
-        flex: 1;
-        padding: 10px 0;
-        border: 1px solid #ccc;
-        background: #f8f9fa;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: bold;
-        color: #444;
-        transition: background 0.1s;
-        font-size: 14px;
-      }
-      .xq-btn:hover {
-        background: #e9ecef;
-      }
-      .xq-btn:active {
-        background: #dde2e6;
-        transform: translateY(1px);
-      }
       .xq-status {
         font-size: 14px;
-        font-weight: bold;
-        color: #555;
-        margin-bottom: 8px;
-        text-align: center;
+        font-weight: 600;
+        color: #636e72;
+        margin-bottom: 10px;
         width: 100%;
+        text-align: center;
+      }
+
+      .xq-controls {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .xq-btn {
+        flex: 1;
+        padding: 12px 0;
+        border: none;
+        border-radius: 6px;
+        background: #f1f2f6;
+        color: #2f3542;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 0 #dfe4ea;
+        font-size: 1rem;
+      }
+      .xq-btn:hover {
+        background: #dfe4ea;
+        transform: translateY(1px);
+      }
+      .xq-btn:active {
+        transform: translateY(3px);
+        box-shadow: none;
       }
     </style>
   </head>
   <body>
-    <div id="games-injector"></div>
+    <div class="main-wrapper" id="games-injector"></div>
 
     <script>
       /* * ==========================================
-       * EDIT THIS SECTION TO ADD/CHANGE GAMES
+       * EASY EDIT AREA
        * ==========================================
        */
       const GAME_LIST = [
         {
-          title: "Arthur Win Ruo Qi 10 Jan 26",
+          title: "Arthur Win Ruo Qi (timeout) 10 Jan 26",
           moves:
             "774710227967706219078070897920421727304109190010262563647973121666657282736370726564101467557279636279692728828628238689627269687279898855438887432287672343",
         },
-        // To add a new game, copy the block below, remove the // and paste it above this line:
-        {
-          title: "Ruo Qi Win Arthur 10 Jan 26",
+  {
+          title: "Ruo Qi Win Arthur (self checkmate) 10 Jan 26",
           moves:
             "79671242192710220919001017137062262563646947808159488151778751568979566679776465476566656759656677734246274666467372468687678666677762547270434477714445706020426062666271705041596762671914676948595435146469641383648483638474708074708040",
         },
+        
       ];
 
       /* ==========================================
-       * ENGINE LOGIC (DO NOT EDIT BELOW)
+       * ENGINE LOGIC
        * ==========================================
        */
       class XiangqiPlayer {
@@ -257,9 +321,8 @@
           rows.forEach((r, y) => {
             let x = 0;
             for (let char of r) {
-              if (!isNaN(char)) {
-                x += parseInt(char);
-              } else {
+              if (!isNaN(char)) x += parseInt(char);
+              else {
                 let color = char === char.toUpperCase() ? "r" : "b";
                 this.engine.board[y][x] = color + char;
                 x++;
@@ -315,7 +378,7 @@
             <div class="xq-status">Ready</div>
             <div class="xq-board-wrapper">
                 <svg class="xq-grid" viewBox="0 0 450 500" preserveAspectRatio="none">
-                    <rect x="0" y="0" width="450" height="500" fill="#fdf5e6"/>
+                    <rect x="0" y="0" width="450" height="500" fill="none"/>
                     <rect x="25" y="25" width="400" height="450" class="border"/>
                     ${[75, 125, 175, 225, 275, 325, 375, 425]
                       .map(
@@ -427,7 +490,8 @@
                 const color = p[0] === "r" ? "red" : "black";
                 const char = this.PIECES[p[1]] || p[1];
                 el.className = `piece ${color}`;
-                el.innerHTML = `<div class="piece-inner">${char}</div>`;
+                // Using <span> wrapper for consistency with last fix attempt
+                el.innerHTML = `<div class="piece-inner"><span class="piece-text">${char}</span></div>`;
                 const px = this.toPx(x, y);
                 el.style.left = px.left + "%";
                 el.style.top = px.top + "%";
@@ -471,34 +535,20 @@
         }
       }
 
-      /* ==========================================
-       * BOOTSTRAP GAMES
-       * ==========================================
-       */
       (function initGames() {
         const injector = document.getElementById("games-injector");
-
         GAME_LIST.forEach((game, index) => {
-          // 1. Create wrapper
-          const wrapper = document.createElement("div");
-          wrapper.className = "game-container";
-
-          // 2. Create Title
+          const playerCard = document.createElement("div");
+          playerCard.className = "xq-player";
           const title = document.createElement("h2");
+          title.className = "game-title";
           title.textContent = game.title || `Game ${index + 1}`;
-          wrapper.appendChild(title);
-
-          // 3. Create Board Container
+          playerCard.appendChild(title);
           const boardDiv = document.createElement("div");
-          // Generate a unique ID for each game
-          const boardId = `xq-game-${index}`;
-          boardDiv.id = boardId;
-          wrapper.appendChild(boardDiv);
-
-          // 4. Inject into DOM
-          injector.appendChild(wrapper);
-
-          // 5. Initialize Player
+          boardDiv.id = `xq-game-${index}`;
+          boardDiv.style.width = "100%";
+          playerCard.appendChild(boardDiv);
+          injector.appendChild(playerCard);
           new XiangqiPlayer(boardDiv, game.moves);
         });
       })();
