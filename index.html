@@ -1,158 +1,128 @@
 
-<h2 class="sr-only">SIXGA Flamingo inbound survey analytics dashboard — 75 responses, April 2025 to March 2026</h2>
+<h2 class="sr-only">SIXGA Flamingo survey analytics — 19 verified responses, February 2026</h2>
 
 <style>
-.dash-section { margin: 0 0 2rem; }
-.dash-section h3 { font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--color-text-secondary); margin: 0 0 12px; padding-bottom: 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
-.metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin: 0 0 1.5rem; }
-.metric-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px 16px; }
-.metric-card .label { font-size: 11px; color: var(--color-text-secondary); margin: 0 0 4px; }
-.metric-card .value { font-size: 26px; font-weight: 500; color: var(--color-text-primary); margin: 0; line-height: 1; }
-.metric-card .sub { font-size: 11px; color: var(--color-text-secondary); margin: 4px 0 0; }
-.chart-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
-.chart-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
-.chart-box { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 16px; }
-.chart-box .ch { font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 12px; }
-.chart-box .note { font-size: 11px; color: var(--color-text-secondary); margin: 8px 0 0; }
-.theme-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
-.theme-card { border-radius: var(--border-radius-md); padding: 12px 14px; border: 0.5px solid var(--color-border-tertiary); }
-.theme-card .tc { font-size: 12px; font-weight: 500; margin: 0 0 6px; }
-.theme-card .td { font-size: 11px; color: var(--color-text-secondary); margin: 0; line-height: 1.5; }
-.lang-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--color-text-secondary); background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 4px 10px; margin: 0 0 1.5rem; }
-.legend-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; font-size: 11px; color: var(--color-text-secondary); }
-.legend-row span { display: flex; align-items: center; gap: 4px; }
-.legend-row .swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
-@media (max-width: 500px) {
-  .chart-grid-2, .chart-grid-3, .theme-grid { grid-template-columns: 1fr; }
-  .metric-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
-}
+.ds { margin: 0 0 2rem; }
+.ds h3 { font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--color-text-secondary); margin: 0 0 12px; padding-bottom: 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.mg { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin: 0 0 1.5rem; }
+.mc { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px 16px; }
+.mc .lb { font-size: 11px; color: var(--color-text-secondary); margin: 0 0 4px; }
+.mc .vl { font-size: 26px; font-weight: 500; color: var(--color-text-primary); margin: 0; line-height: 1; }
+.mc .sb { font-size: 11px; color: var(--color-text-secondary); margin: 4px 0 0; }
+.g2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.g3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+.cb { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 16px; }
+.cb .ch { font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 10px; }
+.cb .nt { font-size: 11px; color: var(--color-text-secondary); margin: 8px 0 0; }
+.lr { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; font-size: 11px; color: var(--color-text-secondary); }
+.lr span { display: flex; align-items: center; gap: 4px; }
+.sw { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.note-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--color-text-secondary); background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 5px 12px; margin: 0 0 1.5rem; border: 0.5px solid var(--color-border-tertiary); }
+.tg { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+.tc { border-radius: var(--border-radius-md); padding: 12px 14px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); }
+.tc .tt { font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 5px; }
+.tc .td { font-size: 11px; color: var(--color-text-secondary); margin: 0; line-height: 1.55; }
+@media (max-width: 500px) { .g2,.g3,.tg { grid-template-columns: 1fr; } .mg { grid-template-columns: repeat(2, minmax(0,1fr)); } }
 </style>
 
 <div style="padding: 1rem 0 0;">
 
-<div class="lang-badge">Survey languages: English &amp; Simplified Chinese (Mandarin) — both readable</div>
+<div class="note-pill">Filtered: Feb 2026 only &nbsp;·&nbsp; Test entry removed &nbsp;·&nbsp; Bilingual responses normalised</div>
 
-<div class="metric-grid">
-  <div class="metric-card">
-    <p class="label">Total responses</p>
-    <p class="value">75</p>
-    <p class="sub">Apr 2025 – Mar 2026</p>
-  </div>
-  <div class="metric-card">
-    <p class="label">Full profiles</p>
-    <p class="value">21</p>
-    <p class="sub">completed all sections</p>
-  </div>
-  <div class="metric-card">
-    <p class="label">Willing to volunteer</p>
-    <p class="value">67%</p>
-    <p class="sub">14 of 21 respondents</p>
-  </div>
+<div class="mg">
+  <div class="mc"><p class="lb">Valid responses</p><p class="vl">19</p><p class="sb">Feb 2 – 23, 2026</p></div>
+  <div class="mc"><p class="lb">Willing to volunteer</p><p class="vl">63%</p><p class="sb">12 of 19</p></div>
+  <div class="mc"><p class="lb">Open to contact</p><p class="vl">63%</p><p class="sb">12 of 19</p></div>
+  <div class="mc"><p class="lb">Experience 10+ yrs</p><p class="vl">68%</p><p class="sb">13 of 19</p></div>
 </div>
 
-<div class="dash-section">
+<div class="ds">
   <h3>Demographics</h3>
-  <div class="chart-grid-2">
-    <div class="chart-box">
-      <p class="ch">Age distribution</p>
-      <div style="position:relative;height:180px;"><canvas id="c-age" role="img" aria-label="Age group bar chart">Below 18: 3, 18–29: 1, 30–39: 3, 40–49: 6, 50–59: 6, 60+: 2</canvas></div>
+  <div class="g2">
+    <div class="cb">
+      <p class="ch">Age group</p>
+      <div style="position:relative;height:180px;"><canvas id="age" role="img" aria-label="Age distribution: 50–59 is largest group (6), followed by 40–49 (5)">50–59: 6, 40–49: 5, 30–39: 3, 60+: 2, Under 18: 2, 18–29: 1</canvas></div>
     </div>
-    <div class="chart-box">
-      <p class="ch">Employment status</p>
-      <div class="legend-row" id="leg-emp"></div>
-      <div style="position:relative;height:150px;"><canvas id="c-emp" role="img" aria-label="Employment doughnut">Employed FT: 14, Self-employed: 4, Student: 3</canvas></div>
+    <div class="cb">
+      <p class="ch">Employment</p>
+      <div class="lr" id="leg-emp"></div>
+      <div style="position:relative;height:155px;"><canvas id="emp" role="img" aria-label="Employment: Employed FT 13, Self-employed 4, Student 2">Employed (FT): 13, Self-employed: 4, Student: 2</canvas></div>
     </div>
   </div>
-  <div style="margin-top:12px;">
-  <div class="chart-box">
+  <div style="margin-top:12px;" class="cb">
     <p class="ch">Nationality</p>
-    <div style="position:relative;height:100px;"><canvas id="c-nat" role="img" aria-label="Nationality bar chart">Singaporean: 17, PR: 3, Foreigner: 1</canvas></div>
-  </div>
+    <div style="position:relative;height:90px;"><canvas id="nat" role="img" aria-label="Nationality: Singaporean 15, PR 3, Foreigner 1">Singaporean: 15, PR: 3, Foreigner: 1</canvas></div>
   </div>
 </div>
 
-<div class="dash-section">
+<div class="ds">
   <h3>Playing profile</h3>
-  <div class="chart-grid-2">
-    <div class="chart-box">
-      <p class="ch">Playing level</p>
-      <div style="position:relative;height:160px;"><canvas id="c-level" role="img" aria-label="Playing level chart">Ungraded: 11, Grade B: 5, Grade A: 3, Master: 2</canvas></div>
+  <div class="g2">
+    <div class="cb">
+      <p class="ch">Grade / level</p>
+      <div style="position:relative;height:155px;"><canvas id="level" role="img" aria-label="Level: Ungraded 10, Grade B 5, Grade A 3, Master 1">Ungraded: 10, Grade B: 5, Grade A: 3, Master: 1</canvas></div>
     </div>
-    <div class="chart-box">
+    <div class="cb">
       <p class="ch">Years playing</p>
-      <div style="position:relative;height:160px;"><canvas id="c-years" role="img" aria-label="Years playing chart">10+ years: 14, 4–10 years: 5, 1–3 years: 1, Less than 1: 1</canvas></div>
+      <div style="position:relative;height:155px;"><canvas id="yrs" role="img" aria-label="Years: 10+ years 13, 4–10 years 5, 1–3 years 1">10+ years: 13, 4–10 years: 5, 1–3 years: 1</canvas></div>
     </div>
   </div>
 </div>
 
-<div class="dash-section">
+<div class="ds">
   <h3>Tournament preferences</h3>
-  <div class="chart-grid-2">
-    <div class="chart-box">
+  <div class="g2">
+    <div class="cb">
       <p class="ch">Competition type</p>
-      <div class="legend-row" id="leg-ct"></div>
-      <div style="position:relative;height:160px;"><canvas id="c-ct" role="img" aria-label="Competition type doughnut">Individual: 10, Both: 10, Team: 1</canvas></div>
+      <div class="lr" id="leg-ct"></div>
+      <div style="position:relative;height:155px;"><canvas id="ct" role="img" aria-label="Competition type: Both 10, Individual 8, Team 1">Both: 10, Individual: 8, Team: 1</canvas></div>
     </div>
-    <div class="chart-box">
+    <div class="cb">
       <p class="ch">Preferred formats <span style="font-weight:400;color:var(--color-text-secondary)">(multi-select)</span></p>
-      <div style="position:relative;height:180px;"><canvas id="c-fmt" role="img" aria-label="Tournament format preferences">One-day events: 11, Weekends only: 9, Public holidays: 7, Multi-day: 6, Weekday evening: 6</canvas></div>
+      <div style="position:relative;height:185px;"><canvas id="fmt" role="img" aria-label="One-day and Weekends tied at 13, PH 11, Multi-day 6, Weekday evenings 2">One-day: 13, Weekends: 13, PH: 11, Multi-day: 6, Weekday: 2</canvas></div>
     </div>
   </div>
 </div>
 
-<div class="dash-section">
+<div class="ds">
   <h3>Engagement &amp; expertise</h3>
-  <div class="chart-grid-3">
-    <div class="chart-box">
-      <p class="ch">Willing to volunteer</p>
-      <div class="legend-row" id="leg-vol"></div>
-      <div style="position:relative;height:130px;"><canvas id="c-vol" role="img" aria-label="Volunteer willingness">Yes: 14, No: 7</canvas></div>
+  <div class="g3">
+    <div class="cb">
+      <p class="ch">Volunteer willingness</p>
+      <div class="lr" id="leg-vol"></div>
+      <div style="position:relative;height:125px;"><canvas id="vol" role="img" aria-label="Volunteer: Yes 12, No 7">Yes: 12, No: 7</canvas></div>
     </div>
-    <div class="chart-box">
+    <div class="cb">
       <p class="ch">Open to future contact</p>
-      <div class="legend-row" id="leg-con"></div>
-      <div style="position:relative;height:130px;"><canvas id="c-con" role="img" aria-label="Contact willingness">Yes: 13, No: 8</canvas></div>
+      <div class="lr" id="leg-con"></div>
+      <div style="position:relative;height:125px;"><canvas id="con" role="img" aria-label="Contact: Yes 12, No 7">Yes: 12, No: 7</canvas></div>
     </div>
-    <div class="chart-box">
+    <div class="cb">
       <p class="ch">Preferred contact</p>
-      <div style="position:relative;height:130px;"><canvas id="c-pref" role="img" aria-label="Preferred contact method">WhatsApp/Phone: 16, Email: 5</canvas></div>
+      <div style="position:relative;height:125px;"><canvas id="pref" role="img" aria-label="WhatsApp/Phone 15, Email 4">WhatsApp/Phone: 15, Email: 4</canvas></div>
     </div>
   </div>
-  <div style="margin-top:12px;">
-  <div class="chart-box">
-    <p class="ch">Self-reported expertise areas <span style="font-weight:400;color:var(--color-text-secondary)">(multi-select, n=19)</span></p>
-    <div style="position:relative;height:200px;"><canvas id="c-exp" role="img" aria-label="Expertise areas">Coaching: 8, Tournament org: 8, IT/Digital: 8, Youth development: 6, Admin/Governance: 4, Media: 3, Sponsorship: 3, Others: 3</canvas></div>
-  </div>
+  <div style="margin-top:12px;" class="cb">
+    <p class="ch">Offered expertise areas <span style="font-weight:400;color:var(--color-text-secondary)">(multi-select)</span></p>
+    <div style="position:relative;height:195px;"><canvas id="exp" role="img" aria-label="Tournament org and IT tied at 8 each, Coaching 7, Youth 6, Admin 4, Others 3, Media 3, Sponsorship 2">Tournament org: 8, IT/Digital: 8, Coaching: 7, Youth dev: 6, Admin: 4, Others: 3, Media: 3, Sponsorship: 2</canvas></div>
   </div>
 </div>
 
-<div class="dash-section">
-  <h3>Response timeline (monthly)</h3>
-  <div class="chart-box">
-    <div style="position:relative;height:180px;"><canvas id="c-time" role="img" aria-label="Monthly submission timeline. Peak in Oct 2025 (14) and Feb 2026 (20).">Apr 2025: 1, May: 6, Jun: 6, Jul: 2, Aug: 2, Sep: 8, Oct: 14, Nov: 9, Dec: 4, Jan 2026: 2, Feb: 20, Mar: 1</canvas></div>
-    <p class="note">Major surge in Feb 2026 (20 responses) likely tied to a specific event or call-to-action</p>
+<div class="ds">
+  <h3>Submission timeline (Feb 2026)</h3>
+  <div class="cb">
+    <div style="position:relative;height:130px;"><canvas id="tl" role="img" aria-label="Most responses on Feb 21 (10), followed by Feb 22 (4), Feb 23 (1), Feb 2 (1)">Feb 2: 1, Feb 21: 10, Feb 22: 4, Feb 23: 1</canvas></div>
+    <p class="nt">10 responses on 21 Feb suggest an in-person event or group messaging blast that day</p>
   </div>
 </div>
 
-<div class="dash-section">
-  <h3>Key themes from open-ended responses</h3>
-  <div class="theme-grid">
-    <div class="theme-card" style="background:var(--color-background-secondary);border-color:var(--color-border-tertiary);">
-      <p class="tc" style="color:var(--color-text-primary);">Location &amp; accessibility</p>
-      <p class="td">Bishan-centric venue limits reach. Multiple respondents urged regional venues and satellite events across North, South, East, West zones.</p>
-    </div>
-    <div class="theme-card" style="background:var(--color-background-secondary);border-color:var(--color-border-tertiary);">
-      <p class="tc" style="color:var(--color-text-primary);">Youth &amp; school outreach</p>
-      <p class="td">Repeatedly cited need: engage MOE, hold school tournaments, include CCAs, and attract youth to prevent talent attrition to iChess.</p>
-    </div>
-    <div class="theme-card" style="background:var(--color-background-secondary);border-color:var(--color-border-tertiary);">
-      <p class="tc" style="color:var(--color-text-primary);">Tournament scheduling</p>
-      <p class="td">Requests for Sunday events (not just Saturday), longer time controls (30+ min), max 5 games per day, and more ungraded ranking events.</p>
-    </div>
-    <div class="theme-card" style="background:var(--color-background-secondary);border-color:var(--color-border-tertiary);">
-      <p class="tc" style="color:var(--color-text-primary);">Funding &amp; sponsorship</p>
-      <p class="td">Donation-only model seen as unsustainable. Calls for IPC status, commercial sponsors, branded team events, and minister/media visibility.</p>
-    </div>
+<div class="ds">
+  <h3>Key themes (open-ended)</h3>
+  <div class="tg">
+    <div class="tc"><p class="tt">Location &amp; access</p><p class="td">Bishan-only venue limits participation. Multiple calls for regional tournaments and satellite events across all five zones.</p></div>
+    <div class="tc"><p class="tt">Youth &amp; school pipeline</p><p class="td">Engage MOE and CCAs, hold inter-school events, and prevent talent loss to iChess. Orphanages also cited as an outreach opportunity.</p></div>
+    <div class="tc"><p class="tt">Scheduling &amp; format</p><p class="td">Sunday events needed (not only Saturday). Time controls of 30+ min preferred; cap games per day at 5. More ranking events for ungraded players.</p></div>
+    <div class="tc"><p class="tt">Funding model</p><p class="td">Donation-only seen as unsustainable. Calls for IPC status, commercial sponsors, branded team events, and better media/ministerial visibility.</p></div>
   </div>
 </div>
 
@@ -160,97 +130,88 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-const R = '#E24B4A', Ra = '#F09595', Am = '#EF9F27', Ama = '#FAC775', Bl = '#378ADD', Bla = '#85B7EB', Te = '#1D9E75', Tea = '#9FE1CB', Pu = '#7F77DD', Gr = '#888780', Gra = '#D3D1C7';
-const dfOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x ?? ctx.parsed.y ?? ctx.parsed} responses` } } } };
+const R='#E24B4A', Am='#EF9F27', Bl='#378ADD', Te='#1D9E75', Pu='#7F77DD', Gr='#888780', Gra='#D3D1C7';
 
-function makeLegend(id, labels, colors) {
+function leg(id, labels, colors) {
   const el = document.getElementById(id);
-  if (!el) return;
-  el.innerHTML = labels.map((l, i) => `<span><span class="swatch" style="background:${colors[i]}"></span>${l}</span>`).join('');
+  if (el) el.innerHTML = labels.map((l,i)=>`<span><span class="sw" style="background:${colors[i]}"></span>${l}</span>`).join('');
 }
 
-new Chart(document.getElementById('c-age'), {
-  type: 'bar',
-  data: { labels: ['Below 18','18–29','30–39','40–49','50–59','60+'], datasets: [{ data: [3,1,3,6,6,2], backgroundColor: R, borderRadius: 3, barThickness: 18 }] },
-  options: { ...dfOpts, indexAxis: 'y', scales: { x: { grid: { display: false }, ticks: { stepSize: 1 } }, y: { grid: { display: false } } }, plugins: { ...dfOpts.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x} people` } } } }
+const base = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } } };
+
+new Chart(document.getElementById('age'), {
+  type:'bar',
+  data:{ labels:['50–59','40–49','30–39','60+','Under 18','18–29'], datasets:[{ data:[6,5,3,2,2,1], backgroundColor:[R,R,Am,Am,Bl,Bl], borderRadius:3, barThickness:18 }] },
+  options:{ ...base, indexAxis:'y', scales:{ x:{ grid:{display:false}, ticks:{stepSize:1} }, y:{ grid:{display:false} } }, plugins:{ ...base.plugins, tooltip:{ callbacks:{ label:ctx=>` ${ctx.parsed.x} people` } } } }
 });
 
-const empLabels = ['Employed (FT)','Self-employed','Student'];
-const empColors = [R, Am, Bl];
-makeLegend('leg-emp', empLabels.map((l,i) => `${l} (${[14,4,3][i]})`), empColors);
-new Chart(document.getElementById('c-emp'), {
-  type: 'doughnut',
-  data: { labels: empLabels, datasets: [{ data: [14,4,3], backgroundColor: empColors, borderWidth: 0, hoverOffset: 4 }] },
-  options: { ...dfOpts, cutout: '65%', plugins: { legend: { display: false } } }
+leg('leg-emp',['Employed FT (13)','Self-employed (4)','Student (2)'],[R,Am,Bl]);
+new Chart(document.getElementById('emp'), {
+  type:'doughnut',
+  data:{ labels:['Employed (FT)','Self-employed','Student'], datasets:[{ data:[13,4,2], backgroundColor:[R,Am,Bl], borderWidth:0, hoverOffset:4 }] },
+  options:{ ...base, cutout:'60%' }
 });
 
-new Chart(document.getElementById('c-nat'), {
-  type: 'bar',
-  data: { labels: ['Singaporean','Permanent Resident','Foreigner (SG-based)'], datasets: [{ data: [17,3,1], backgroundColor: [R, Am, Bl], borderRadius: 3, barThickness: 22 }] },
-  options: { ...dfOpts, indexAxis: 'y', scales: { x: { grid: { display: false }, ticks: { stepSize: 1 }, max: 20 }, y: { grid: { display: false } } }, plugins: { ...dfOpts.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x} people` } } } }
+new Chart(document.getElementById('nat'), {
+  type:'bar',
+  data:{ labels:['Singaporean','Permanent Resident','Foreigner (SG-based)'], datasets:[{ data:[15,3,1], backgroundColor:[R,Am,Bl], borderRadius:3, barThickness:20 }] },
+  options:{ ...base, indexAxis:'y', scales:{ x:{ grid:{display:false}, ticks:{stepSize:1}, max:18 }, y:{ grid:{display:false} } }, plugins:{ ...base.plugins, tooltip:{ callbacks:{ label:ctx=>` ${ctx.parsed.x} people` } } } }
 });
 
-new Chart(document.getElementById('c-level'), {
-  type: 'bar',
-  data: { labels: ['Ungraded','Grade B','Grade A','Master'], datasets: [{ data: [11,5,3,2], backgroundColor: [R, Am, Bl, Te], borderRadius: 3, barThickness: 22 }] },
-  options: { ...dfOpts, scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { stepSize: 1 } } }, plugins: { ...dfOpts.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} players` } } } }
+new Chart(document.getElementById('level'), {
+  type:'bar',
+  data:{ labels:['Ungraded','Grade B','Grade A','Master'], datasets:[{ data:[10,5,3,1], backgroundColor:[R,Am,Bl,Te], borderRadius:3, barThickness:24 }] },
+  options:{ ...base, scales:{ x:{grid:{display:false}}, y:{ grid:{color:'rgba(128,128,128,0.1)'}, ticks:{stepSize:1} } }, plugins:{ ...base.plugins, tooltip:{ callbacks:{ label:ctx=>` ${ctx.parsed.y} players` } } } }
 });
 
-new Chart(document.getElementById('c-years'), {
-  type: 'bar',
-  data: { labels: ['10+ years','4–10 years','1–3 years','< 1 year'], datasets: [{ data: [14,5,1,1], backgroundColor: [R, Am, Bl, Te], borderRadius: 3, barThickness: 22 }] },
-  options: { ...dfOpts, scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { stepSize: 1 } } }, plugins: { ...dfOpts.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} players` } } } }
+new Chart(document.getElementById('yrs'), {
+  type:'bar',
+  data:{ labels:['10+ years','4–10 years','1–3 years'], datasets:[{ data:[13,5,1], backgroundColor:[R,Am,Bl], borderRadius:3, barThickness:24 }] },
+  options:{ ...base, scales:{ x:{grid:{display:false}}, y:{ grid:{color:'rgba(128,128,128,0.1)'}, ticks:{stepSize:1} } }, plugins:{ ...base.plugins, tooltip:{ callbacks:{ label:ctx=>` ${ctx.parsed.y} players` } } } }
 });
 
-const ctLabels = ['Individual','Both','Team'];
-const ctColors = [R, Am, Bl];
-makeLegend('leg-ct', ctLabels.map((l,i)=>`${l} (${[10,10,1][i]})`), ctColors);
-new Chart(document.getElementById('c-ct'), {
-  type: 'doughnut',
-  data: { labels: ctLabels, datasets: [{ data: [10,10,1], backgroundColor: ctColors, borderWidth: 0, hoverOffset: 4 }] },
-  options: { ...dfOpts, cutout: '60%', plugins: { legend: { display: false } } }
+leg('leg-ct',['Both (10)','Individual (8)','Team (1)'],[R,Am,Bl]);
+new Chart(document.getElementById('ct'), {
+  type:'doughnut',
+  data:{ labels:['Both','Individual','Team'], datasets:[{ data:[10,8,1], backgroundColor:[R,Am,Bl], borderWidth:0, hoverOffset:4 }] },
+  options:{ ...base, cutout:'60%' }
 });
 
-new Chart(document.getElementById('c-fmt'), {
-  type: 'bar',
-  data: { labels: ['One-day events','Weekends only','Public holidays','Multi-day','Weekday evenings'], datasets: [{ data: [11,9,7,6,6], backgroundColor: [R,R,Am,Am,Bl], borderRadius: 3, barThickness: 18 }] },
-  options: { ...dfOpts, indexAxis: 'y', scales: { x: { grid: { display: false }, ticks: { stepSize: 1 }, max: 14 }, y: { grid: { display: false } } }, plugins: { ...dfOpts.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x} of 21` } } } }
+new Chart(document.getElementById('fmt'), {
+  type:'bar',
+  data:{ labels:['One-day events','Weekends only','Public holidays','Consecutive multi-day','Weekday evenings'], datasets:[{ data:[13,13,11,6,2], backgroundColor:[R,R,Am,Am,Bl], borderRadius:3, barThickness:18 }] },
+  options:{ ...base, indexAxis:'y', scales:{ x:{ grid:{display:false}, ticks:{stepSize:1}, max:16 }, y:{ grid:{display:false} } }, plugins:{ ...base.plugins, tooltip:{ callbacks:{ label:ctx=>` ${ctx.parsed.x} of 19` } } } }
 });
 
-const volColors = [Te, Gra];
-makeLegend('leg-vol', ['Yes (14)','No (7)'], volColors);
-new Chart(document.getElementById('c-vol'), {
-  type: 'doughnut',
-  data: { labels: ['Yes','No'], datasets: [{ data: [14,7], backgroundColor: volColors, borderWidth: 0, hoverOffset: 4 }] },
-  options: { ...dfOpts, cutout: '60%', plugins: { legend: { display: false } } }
+leg('leg-vol',['Yes (12)','No (7)'],[Te,Gra]);
+new Chart(document.getElementById('vol'), {
+  type:'doughnut',
+  data:{ labels:['Yes','No'], datasets:[{ data:[12,7], backgroundColor:[Te,Gra], borderWidth:0, hoverOffset:4 }] },
+  options:{ ...base, cutout:'60%' }
 });
 
-const conColors = [Te, Gra];
-makeLegend('leg-con', ['Yes (13)','No (8)'], conColors);
-new Chart(document.getElementById('c-con'), {
-  type: 'doughnut',
-  data: { labels: ['Yes','No'], datasets: [{ data: [13,8], backgroundColor: conColors, borderWidth: 0, hoverOffset: 4 }] },
-  options: { ...dfOpts, cutout: '60%', plugins: { legend: { display: false } } }
+leg('leg-con',['Yes (12)','No (7)'],[Te,Gra]);
+new Chart(document.getElementById('con'), {
+  type:'doughnut',
+  data:{ labels:['Yes','No'], datasets:[{ data:[12,7], backgroundColor:[Te,Gra], borderWidth:0, hoverOffset:4 }] },
+  options:{ ...base, cutout:'60%' }
 });
 
-new Chart(document.getElementById('c-pref'), {
-  type: 'bar',
-  data: { labels: ['WhatsApp / Phone','Email'], datasets: [{ data: [16,5], backgroundColor: [R, Bl], borderRadius: 3, barThickness: 28 }] },
-  options: { ...dfOpts, scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { stepSize: 1 } } }, plugins: { ...dfOpts.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} people` } } } }
+new Chart(document.getElementById('pref'), {
+  type:'bar',
+  data:{ labels:['WhatsApp / Phone','Email'], datasets:[{ data:[15,4], backgroundColor:[R,Bl], borderRadius:3, barThickness:30 }] },
+  options:{ ...base, scales:{ x:{grid:{display:false}}, y:{ grid:{color:'rgba(128,128,128,0.1)'}, ticks:{stepSize:1}, max:17 } }, plugins:{ ...base.plugins, tooltip:{ callbacks:{ label:ctx=>` ${ctx.parsed.y} people` } } } }
 });
 
-new Chart(document.getElementById('c-exp'), {
-  type: 'bar',
-  data: { labels: ['Coaching','Tournament org','IT / Digital','Youth development','Admin / Governance','Media & content','Sponsorship','Others'], datasets: [{ data: [8,8,8,6,4,3,3,3], backgroundColor: [R,Am,Bl,Te,Pu,R,Am,Gr], borderRadius: 3, barThickness: 18 }] },
-  options: { ...dfOpts, indexAxis: 'y', scales: { x: { grid: { display: false }, ticks: { stepSize: 1 }, max: 10 }, y: { grid: { display: false } } }, plugins: { ...dfOpts.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x} respondents` } } } }
+new Chart(document.getElementById('exp'), {
+  type:'bar',
+  data:{ labels:['Tournament org','IT / Digital','Coaching','Youth dev','Admin / Gov','Others','Media','Sponsorship'], datasets:[{ data:[8,8,7,6,4,3,3,2], backgroundColor:[R,Am,Bl,Te,Pu,Gr,R,Am], borderRadius:3, barThickness:18 }] },
+  options:{ ...base, indexAxis:'y', scales:{ x:{ grid:{display:false}, ticks:{stepSize:1}, max:10 }, y:{ grid:{display:false} } }, plugins:{ ...base.plugins, tooltip:{ callbacks:{ label:ctx=>` ${ctx.parsed.x} respondents` } } } }
 });
 
-new Chart(document.getElementById('c-time'), {
-  type: 'line',
-  data: {
-    labels: ["Apr '25","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan '26","Feb","Mar"],
-    datasets: [{ data: [1,6,6,2,2,8,14,9,4,2,20,1], borderColor: R, backgroundColor: Ra+'33', fill: true, tension: 0.35, pointRadius: 4, pointBackgroundColor: R, borderWidth: 2 }]
-  },
-  options: { ...dfOpts, scales: { x: { grid: { display: false }, ticks: { font: { size: 11 } } }, y: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { stepSize: 2 }, beginAtZero: true } }, plugins: { legend: { display: false } } }
+new Chart(document.getElementById('tl'), {
+  type:'bar',
+  data:{ labels:['Feb 2','Feb 21','Feb 22','Feb 23'], datasets:[{ data:[1,10,4,1], backgroundColor:[Am,R,R,Am], borderRadius:3, barThickness:36 }] },
+  options:{ ...base, scales:{ x:{ grid:{display:false} }, y:{ grid:{color:'rgba(128,128,128,0.1)'}, ticks:{stepSize:1}, beginAtZero:true } }, plugins:{ ...base.plugins, tooltip:{ callbacks:{ label:ctx=>` ${ctx.parsed.y} submissions` } } } }
 });
 </script>
